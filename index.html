@@ -16,92 +16,19 @@ body {
   color: #f5f5f5;
   margin:0; padding:0;
 }
-h1 {
-  margin-top: 24px;
-  font-size: 2rem;
-  color: #ffd6f7;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-}
-.container {
-  width: 90%;
-  max-width: 700px;
-  margin: 16px auto;
-}
-.card {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-  backdrop-filter: blur(10px);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.6);
-}
-textarea, input {
-  width: 100%;
-  box-sizing: border-box;
-  margin: 6px 0;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  font-family: monospace;
-  font-size: 0.95rem;
-}
-button {
-  background: linear-gradient(90deg, #ff5aab, #8a2be2);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 18px;
-  margin-top: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;
-}
-button:hover {
-  background: linear-gradient(90deg, #ff75c4, #a64ddb);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  filter: brightness(1.1);
-}
-button:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-pre {
-  background: rgba(255,255,255,0.1);
-  padding: 10px;
-  border-radius: 10px;
-  overflow-x: auto;
-  font-size: 0.85rem;
-  color: #fff;
-}
+h1 { margin-top: 24px; font-size: 2rem; color: #ffd6f7; text-shadow: 0 2px 8px rgba(0,0,0,0.5);}
+.container { width: 90%; max-width: 700px; margin: 16px auto;}
+.card { background: rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(10px); transition: transform 0.2s, box-shadow 0.2s;}
+.card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.6);}
+textarea, input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-family: monospace; font-size: 0.95rem;}
+button { background: linear-gradient(90deg, #ff5aab, #8a2be2); color: #fff; border: none; border-radius: 12px; padding: 12px 18px; margin-top: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;}
+button:hover { background: linear-gradient(90deg, #ff75c4, #a64ddb); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); filter: brightness(1.1);}
+button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.4);}
+pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 0.85rem; color: #fff;}
 .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-.flex-col { display:flex; flex-direction:column; }
-#toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
-}
-.toast {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  padding: 10px 16px;
-  margin-top: 8px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  backdrop-filter: blur(5px);
-  font-weight: 500;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  opacity: 0;
-  transform: translateY(-20px);
-}
+.flex-col { display:flex; flex-direction:column;}
+#toast-container { position: fixed; top:20px; right:20px; z-index:9999;}
+.toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(5px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
 </style>
 </head>
 <body>
@@ -116,7 +43,6 @@ pre {
       <label>Ваш публичный ключ:</label>
       <textarea id="myPub" rows="3" readonly></textarea>
       <div>Отпечаток (SHA-256, 16 байт hex): <code id="myFp"></code></div>
-      <div class="note">Скопируйте и отправьте собеседнику. Приватный ключ хранится локально!</div>
     </div>
   </div>
 
@@ -125,7 +51,6 @@ pre {
     <textarea id="peerPub" rows="3" placeholder="Вставьте публичный ключ"></textarea>
     <button id="importPeer" disabled>Импортировать ключ</button>
     <div>Отпечаток собеседника: <code id="peerFp"></code></div>
-    <div class="note">Сверьте отпечатки по звонку/лично.</div>
   </div>
 
   <div class="card">
@@ -207,4 +132,39 @@ pre {
     if(!s){ showToast('Вставьте публичный ключ!'); return; }
     try{
       peerPubUint8 = fromBase64(s);
-      document
+      document.getElementById('peerFp').textContent = await sha256hex(peerPubUint8);
+      document.getElementById('peerPub').value=''; // автоочистка
+      showToast('Ключ собеседника импортирован!');
+    } catch(e){ showToast('Неверный ключ!'); }
+  };
+
+  encryptBtn.onclick = ()=>{
+    const text = document.getElementById('plain').value.trim();
+    if(!text){ showToast('Введите сообщение!'); return; }
+    const nonce = nacl.randomBytes(24);
+    const encrypted = nacl.box(utf8toUint(text), nonce, peerPubUint8, keyPair.secretKey);
+    document.getElementById('cipherout').value = toBase64(nonce)+':'+toBase64(encrypted);
+    showToast('Сообщение зашифровано!');
+    document.getElementById('plain').value=''; // очистка поля
+  };
+
+  decryptBtn.onclick = ()=>{
+    const data = document.getElementById('cipherin').value.trim();
+    if(!data){ showToast('Вставьте зашифрованное сообщение!'); return; }
+    try{
+      const [nonceB64, msgB64] = data.split(':');
+      const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
+      if(!decrypted) throw new Error('Ошибка дешифровки');
+      document.getElementById('plainout').value = uintToUtf8(decrypted);
+      document.getElementById('cipherin').value=''; // очистка поля
+      showToast('Сообщение расшифровано!');
+    } catch(e){
+      showToast('Не удалось расшифровать!');
+    }
+  };
+
+})();
+</script>
+
+</body>
+</html>
