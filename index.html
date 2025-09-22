@@ -1,4 +1,4 @@
-<!doctype html>
+  <!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
@@ -18,7 +18,7 @@ body {
 }
 h1 { margin-top: 24px; font-size: 2rem; color: #ffd6f7; text-shadow: 0 2px 8px rgba(0,0,0,0.5);}
 .container { width: 90%; max-width: 700px; margin: 16px auto;}
-.card { background: rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(10px); transition: transform 0.2s, box-shadow 0.2s;}
+.card { background: rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(4px); transition: transform 0.2s, box-shadow 0.2s;}
 .card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.6);}
 textarea, input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-family: monospace; font-size: 0.95rem;}
 button { background: linear-gradient(90deg, #ff5aab, #8a2be2); color: #fff; border: none; border-radius: 12px; padding: 12px 18px; margin-top: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;}
@@ -28,7 +28,9 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .flex-col { display:flex; flex-direction:column;}
 #toast-container { position: fixed; top:20px; right:20px; z-index:9999;}
-.toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(5px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
+.toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(3px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
+footer { width:100%; text-align:center; margin:24px 0; }
+footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -73,6 +75,12 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 
 <div id="toast-container"></div>
 
+<footer>
+  <a href="https://t.me/BluzikArhimew" target="_blank">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
+  </a>
+</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
 <script>
@@ -84,6 +92,13 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 
   let keyPair = null;
   let peerPubUint8 = null;
+  const MAX_LENGTH = 3000;
+
+  function sanitizeInput(str){
+    return str.replace(/[<>&"'`]/g, function(c){
+      return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c];
+    });
+  }
 
   function toBase64(u8){ return b64encode(u8); }
   function fromBase64(s){ return b64decode(s); }
@@ -93,20 +108,19 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
     return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
   }
 
-  function showToast(message, duration = 3000) {
+  const maxToasts = 3;
+  function showToast(message, duration = 3000){
     const container = document.getElementById('toast-container');
+    if(container.children.length >= maxToasts){ container.children[0].remove(); }
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.textContent = message;
+    toast.textContent = sanitizeInput(message);
     container.appendChild(toast);
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-20px)';
-      toast.addEventListener('transitionend', () => { toast.remove(); });
+    requestAnimationFrame(()=>{ toast.style.opacity='1'; toast.style.transform='translateY(0)'; });
+    setTimeout(()=>{
+      toast.style.opacity='0';
+      toast.style.transform='translateY(-20px)';
+      toast.addEventListener('transitionend', ()=>{ toast.remove(); });
     }, duration);
   }
 
@@ -117,52 +131,54 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 
   genBtn.onclick = async ()=>{
     keyPair = nacl.box.keyPair();
-    const pubB64 = toBase64(keyPair.publicKey);
-    document.getElementById('myPub').value = pubB64;
+    document.getElementById('myPub').value = toBase64(keyPair.publicKey);
     document.getElementById('pubArea').style.display='flex';
     document.getElementById('myFp').textContent = await sha256hex(keyPair.publicKey);
-    importBtn.disabled=false;
-    encryptBtn.disabled=false;
-    decryptBtn.disabled=false;
+    importBtn.disabled=false; encryptBtn.disabled=false; decryptBtn.disabled=false;
     showToast('Публичный ключ сгенерирован!');
   };
 
   importBtn.onclick = async ()=>{
-    const s = document.getElementById('peerPub').value.trim();
+    let s = sanitizeInput(document.getElementById('peerPub').value.trim());
     if(!s){ showToast('Вставьте публичный ключ!'); return; }
     try{
       peerPubUint8 = fromBase64(s);
       document.getElementById('peerFp').textContent = await sha256hex(peerPubUint8);
-      document.getElementById('peerPub').value=''; // автоочистка
+      document.getElementById('peerPub').value='';
       showToast('Ключ собеседника импортирован!');
     } catch(e){ showToast('Неверный ключ!'); }
   };
 
   encryptBtn.onclick = ()=>{
-    const text = document.getElementById('plain').value.trim();
+    let text = sanitizeInput(document.getElementById('plain').value.trim());
     if(!text){ showToast('Введите сообщение!'); return; }
+    if(text.length > MAX_LENGTH){ showToast('Сообщение слишком длинное!'); return; }
     const nonce = nacl.randomBytes(24);
     const encrypted = nacl.box(utf8toUint(text), nonce, peerPubUint8, keyPair.secretKey);
     document.getElementById('cipherout').value = toBase64(nonce)+':'+toBase64(encrypted);
     showToast('Сообщение зашифровано!');
-    document.getElementById('plain').value=''; // очистка поля
+    document.getElementById('plain').value='';
   };
 
   decryptBtn.onclick = ()=>{
-    const data = document.getElementById('cipherin').value.trim();
+    let data = sanitizeInput(document.getElementById('cipherin').value.trim());
     if(!data){ showToast('Вставьте зашифрованное сообщение!'); return; }
     try{
       const [nonceB64, msgB64] = data.split(':');
       const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
       if(!decrypted) throw new Error('Ошибка дешифровки');
       document.getElementById('plainout').value = uintToUtf8(decrypted);
-      document.getElementById('cipherin').value=''; // очистка поля
+      document.getElementById('cipherin').value='';
       showToast('Сообщение расшифровано!');
     } catch(e){
       showToast('Не удалось расшифровать!');
     }
   };
 
+  // Telegram icon hover
+  const tgIcon = document.querySelector('footer a img');
+  tgIcon.addEventListener('mouseover', () => tgIcon.style.transform = 'scale(1.2)');
+  tgIcon.addEventListener('mouseout', () => tgIcon.style.transform = 'scale(1)');
 })();
 </script>
 
