@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Chat 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f3f4f6;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  h1 { margin-top: 24px; color: #111827; }
+  .container { width: 90%; max-width: 700px; margin: 12px auto; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 16px;
+  }
+  .card h2 { margin-top:0; color: #1f2937; font-size:1.2rem; }
+  textarea,input { width:100%; box-sizing:border-box; margin:6px 0; padding:8px; border-radius:6px; border:1px solid #d1d5db; font-family: monospace; font-size:0.9rem; }
+  button {
+    background:#3b82f6; color:#fff; border:none; border-radius:8px;
+    padding:10px 16px; margin-top:6px; cursor:pointer; font-weight:600;
+    transition:0.2s;
+  }
+  button:disabled { background:#9ca3af; cursor: not-allowed; }
+  button:hover:not(:disabled) { background:#2563eb; }
+  pre { background:#f9fafb; padding:8px; overflow-x:auto; border-radius:6px; font-size:0.85rem; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .flex-col { display:flex; flex-direction:column; }
+  .note { font-size:0.75rem; color:#6b7280; margin-top:4px; }
+</style>
+</head>
+<body>
+<h1>Secure Chat 2.0 🔐</h1>
+<div class="container">
+
+  <!-- Генерация ключей -->
+  <div class="card">
+    <h2>1️⃣ Сгенерировать пару ключей</h2>
+    <button id="gen">Сгенерировать ключи</button>
+    <div id="pubArea" style="display:none" class="flex-col">
+      <label>Ваш публичный ключ:</label>
+      <textarea id="myPub" rows="3" readonly></textarea>
+      <div>Отпечаток (SHA-256, 16 байт hex): <code id="myFp"></code></div>
+      <div class="note">Скопируйте и отправьте собеседнику. Приватный ключ хранится локально!</div>
+    </div>
+  </div>
+
+  <!-- Импорт ключа собеседника -->
+  <div class="card">
+    <h2>2️⃣ Вставьте публичный ключ собеседника</h2>
+    <textarea id="peerPub" rows="3" placeholder="Вставьте публичный ключ"></textarea>
+    <button id="importPeer" disabled>Импортировать ключ</button>
+    <div>Отпечаток собеседника: <code id="peerFp"></code></div>
+    <div class="note">Сверьте отпечатки по звонку/лично.</div>
+  </div>
+
+  <!-- Шифрование -->
+  <div class="card">
+    <h2>3️⃣ Шифровать сообщение</h2>
+    <textarea id="plain" rows="3" placeholder="Введите сообщение"></textarea>
+    <button id="encryptBtn" disabled>Зашифровать</button>
+    <label>Зашифрованная строка:</label>
+    <textarea id="cipherout" rows="3" readonly></textarea>
+  </div>
+
+  <!-- Дешифровка -->
+  <div class="card">
+    <h2>4️⃣ Дешифровать сообщение</h2>
+    <textarea id="cipherin" rows="3" placeholder="Вставьте зашифрованную строку"></textarea>
+    <button id="decryptBtn" disabled>Дешифровать</button>
+    <label>Расшифрованный текст:</label>
+    <textarea id="plainout" rows="3" readonly></textarea>
+  </div>
+
+  <div class="note">Публичные ключи можно передавать открыто. Всегда сверяйте отпечатки, чтобы исключить MITM.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+<script>
+(async function(){
+  const b64encode = nacl.util.encodeBase64;
+  const b64decode = nacl.util.decodeBase64;
+  const utf8toUint = nacl.util.decodeUTF8;
+  const uintToUtf8 = nacl.util.encodeUTF8;
+
+  let keyPair = null;
+  let peerPubUint8 = null;
+  let sharedKey = null;
+
+  function toBase64(u8){ return b64encode(u8); }
+  function fromBase64(s){ return b64decode(s); }
+
+  async function sha256hex(u8){
+    const hash = await crypto.subtle.digest('SHA-256', u8);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
+  }
+
+  const genBtn = document.getElementById('gen');
+  const importBtn = document.getElementById('importPeer');
+  const encryptBtn = document.getElementById('encryptBtn');
+  const decryptBtn = document.getElementById('decryptBtn');
+
+  genBtn.onclick = async ()=>{
+    keyPair = nacl.box.keyPair();
+    const pubB64 = toBase64(keyPair.publicKey);
+    document.getElementById('myPub').value = pubB64;
+    document.getElementById('pubArea').style.display='flex';
+    document.getElementById('myFp').textContent = await sha256hex(keyPair.publicKey);
+    importBtn.disabled=false;
+    encryptBtn.disabled=false;
+    decryptBtn.disabled=false;
+    alert('Публичный ключ сгенерирован. Отправьте его собеседнику.');
+  };
+
+  importBtn.onclick = async ()=>{
+    const s = document.getElementById('peerPub').value.trim();
+    if(!s){ alert('Вставьте публичный ключ'); return; }
+    try{
+      peerPubUint8 = fromBase64(s);
+      document.getElementById('peerFp').textContent = await sha256hex(peerPubUint8);
+      sharedKey = nacl.box.before(peerPubUint8, keyPair.secretKey);
+      alert('Ключ собеседника импортирован. Сверьте отпечатки перед использованием.');
+    }catch(e){ alert('Ошибка импорта ключа: '+e); }
+  };
+
+  encryptBtn.onclick = ()=>{
+    if(!sharedKey){ alert('Импортируйте ключ собеседника'); return; }
+    const pt = document.getElementById('plain').value;
+    const ptU8 = utf8toUint(pt);
+    const nonce = nacl.randomBytes(24);
+    const cipher = nacl.box.after(ptU8, nonce, sharedKey);
+    const combined = new Uint8Array(nonce.length + cipher.length);
+    combined.set(nonce,0); combined.set(cipher,nonce.length);
+    document.getElementById('cipherout').value = toBase64(combined);
+  };
+
+  decryptBtn.onclick = ()=>{
+    if(!sharedKey){ alert('Импортируйте ключ собеседника'); return; }
+    const s = document.getElementById('cipherin').value.trim();
+    if(!s){ alert('Вставьте зашифрованную строку'); return; }
+    try{
+      const all = fromBase64(s);
+      const nonce = all.slice(0,24);
+      const cipher = all.slice(24);
+      const plainU8 = nacl.box.open.after(cipher, nonce, sharedKey);
+      if(!plainU8){ alert('Не удалось расшифровать'); return; }
+      document.getElementById('plainout').value = uintToUtf8(plainU8);
+    }catch(e){ alert('Ошибка при дешифровке: '+e); }
+  };
+})();
+</script>
+</body>
+</html>
