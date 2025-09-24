@@ -33,7 +33,19 @@ footer { width:100%; text-align:center; margin:24px 0; }
 footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer; }
 .arrow-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; margin-top: 8px; transition: transform 0.2s; }
 .arrow-btn:hover { transform: scale(1.2); }
-.collapsible { display:none; flex-direction:column; gap:8px; margin-top:8px; }
+
+/* Плавный аккордеон */
+.collapsible {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.collapsible.open {
+  max-height: 200px; /* регулируется под содержимое */
+}
 </style>
 </head>
 <body>
@@ -104,9 +116,7 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   const MAX_LENGTH = 3000;
 
   function sanitizeInput(str){
-    return str.replace(/[<>&"'`]/g, function(c){
-      return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c];
-    });
+    return str.replace(/[<>&"'`]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
   }
 
   function toBase64(u8){ return b64encode(u8); }
@@ -140,11 +150,8 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   const togglePrivBtn = document.getElementById('togglePriv');
   const privControls = document.getElementById('privControls');
 
-  togglePrivBtn.onclick = ()=>{
-    privControls.style.display = privControls.style.display==='flex'?'none':'flex';
-  };
-  privControls.style.display='none';
-  privControls.classList.add('flex-col');
+  // Аккордеон приватного ключа
+  togglePrivBtn.onclick = () => { privControls.classList.toggle('open'); };
 
   genBtn.onclick = async ()=>{
     keyPair = nacl.box.keyPair();
@@ -187,12 +194,9 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
       document.getElementById('plainout').value = uintToUtf8(decrypted);
       document.getElementById('cipherin').value='';
       showToast('Сообщение расшифровано!');
-    } catch(e){
-      showToast('Не удалось расшифровать!');
-    }
+    } catch(e){ showToast('Не удалось расшифровать!'); }
   };
 
-  // Telegram icon hover
   const tgIcon = document.querySelector('footer a img');
   tgIcon.addEventListener('mouseover', () => tgIcon.style.transform = 'scale(1.2)');
   tgIcon.addEventListener('mouseout', () => tgIcon.style.transform = 'scale(1)');
