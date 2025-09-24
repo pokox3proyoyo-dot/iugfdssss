@@ -37,6 +37,7 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
 
 <h1>Secure Chat 2.0 🔐</h1>
 <div class="container">
+  <button id="resetBtn">Очистить всё</button>
 
   <div class="card">
     <h2>1️⃣ Сгенерировать пару ключей</h2>
@@ -44,6 +45,7 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
     <div id="pubArea" style="display:none" class="flex-col">
       <label>Ваш публичный ключ:</label>
       <textarea id="myPub" rows="3" readonly></textarea>
+      <button id="copyPub">Копировать ключ</button>
       <div>Отпечаток (SHA-256, 16 байт hex): <code id="myFp"></code></div>
     </div>
   </div>
@@ -61,6 +63,7 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
     <button id="encryptBtn" disabled>Зашифровать</button>
     <label>Зашифрованная строка:</label>
     <textarea id="cipherout" rows="3" readonly></textarea>
+    <button id="copyCipher">Копировать зашифрованное</button>
   </div>
 
   <div class="card">
@@ -81,101 +84,230 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   </a>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
 <script>
-(async function(){
-  const b64encode = nacl.util.encodeBase64;
-  const b64decode = nacl.util.decodeBase64;
-  const utf8toUint = nacl.util.decodeUTF8;
-  const uintToUtf8 = nacl.util.encodeUTF8;
-
-  let keyPair = null;
-  let peerPubUint8 = null;
-  const MAX_LENGTH = 3000;
-
-  function sanitizeInput(str){
-    return str.replace(/[<>&"'`]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
-  }
-
-  function toBase64(u8){ return b64encode(u8); }
-  function fromBase64(s){ return b64decode(s); }
-
-  async function sha256hex(u8){
-    const hash = await crypto.subtle.digest('SHA-256', u8);
-    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
-  }
-
-  const maxToasts = 3;
-  function showToast(message, duration = 3000){
-    const container = document.getElementById('toast-container');
-    if(container.children.length >= maxToasts){ container.children[0].remove(); }
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = sanitizeInput(message);
-    container.appendChild(toast);
-    requestAnimationFrame(()=>{ toast.style.opacity='1'; toast.style.transform='translateY(0)'; });
-    setTimeout(()=>{
-      toast.style.opacity='0';
-      toast.style.transform='translateY(-20px)';
-      toast.addEventListener('transitionend', ()=>{ toast.remove(); });
-    }, duration);
-  }
+(async function () {
+  const elements = {
+    myPub: document.getElementById('myPub'),
+    pubArea: document.getElementById('pubArea'),
+    myFp: document.getElementById('myFp'),
+    peerPub: document.getElementById('peerPub'),
+    peerFp: document.getElementById('peerFp'),
+    plain: document.getElementById('plain'),
+    cipherout: document.getElementById('cipherout'),
+    cipherin: document.getElementById('cipherin'),
+    plainout: document.getElementById('plainout'),
+  };
 
   const genBtn = document.getElementById('gen');
   const importBtn = document.getElementById('importPeer');
   const encryptBtn = document.getElementById('encryptBtn');
   const decryptBtn = document.getElementById('decryptBtn');
+  const copyPubBtn = document.getElementById('copyPub');
+  const copyCipherBtn = document.getElementById('copyCipher');
+  const resetBtn = document.getElementById('resetBtn');
 
-  genBtn.onclick = async ()=>{
+  let keyPair = null;
+  let peerPubUint8 = null;
+  const MAX_LENGTH = 3000;
+  const PUBLIC_KEY_LENGTH = 32;
+  const NONCE_LENGTH = 24;
+
+  function sanitizeInput(str) {
+    return str.replace(/[<>&"'`]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;', '`': '&#96;' })[c]);
+  }
+
+  function toBase64(u8) { return nacl.util.encodeBase64(u8); }
+  function fromBase64(s) { return nacl.util.decodeBase64(s); }
+  async function sha256hex(u8) {
+    const hash = await crypto.subtle.digest('SHA-256', u8);
+    return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  }
+
+  function showToast(message, duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (container.children.length >= 3) container.children[0].remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = sanitizeInput(message);
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-20px)';
+      toast.addEventListener('transitionend', () => toast.remove());
+    }, duration);
+  }
+
+  function loadKeys() {
+    const savedKeyPair = localStorage.getItem('keyPair');
+    if (savedKeyPair) {
+      keyPair = JSON.parse(savedKeyPair);
+      keyPair.publicKey = fromBase64(keyPair.publicKey);
+      keyPair.secretKey = fromBase64(keyPair.secretKey);
+      elements.myPub.value = toBase64(keyPair.publicKey);
+      elements.pubArea.style.display = 'flex';
+      sha256hex(keyPair.publicKey).then((fp) => {
+        elements.myFp.textContent = fp;
+      });
+      importBtn.disabled = false;
+      encryptBtn.disabled = false;
+      decryptBtn.disabled = false;
+    }
+  }
+
+  function generateKeys() {
     keyPair = nacl.box.keyPair();
-    document.getElementById('myPub').value = toBase64(keyPair.publicKey);
-    document.getElementById('pubArea').style.display='flex';
-    document.getElementById('myFp').textContent = await sha256hex(keyPair.publicKey);
-    importBtn.disabled=false; encryptBtn.disabled=false; decryptBtn.disabled=false;
+    localStorage.setItem('keyPair', JSON.stringify({
+      publicKey: toBase64(keyPair.publicKey),
+      secretKey: toBase64(keyPair.secretKey),
+    }));
+    elements.myPub.value = toBase64(keyPair.publicKey);
+    elements.pubArea.style.display = 'flex';
+    sha256hex(keyPair.publicKey).then((fp) => {
+      elements.myFp.textContent = fp;
+    });
+    importBtn.disabled = false;
+    encryptBtn.disabled = false;
+    decryptBtn.disabled = false;
     showToast('Публичный ключ сгенерирован!');
-  };
+    elements.peerPub.focus();
+  }
 
-  importBtn.onclick = async ()=>{
-    let s = sanitizeInput(document.getElementById('peerPub').value.trim());
-    if(!s){ showToast('Вставьте публичный ключ!'); return; }
-    try{
+  function importPeerKey() {
+    let s = sanitizeInput(elements.peerPub.value.trim());
+    if (!s) {
+      showToast('Вставьте публичный ключ!');
+      return;
+    }
+    try {
       peerPubUint8 = fromBase64(s);
-      document.getElementById('peerFp').textContent = await sha256hex(peerPubUint8);
-      document.getElementById('peerPub').value='';
+      if (peerPubUint8.length !== PUBLIC_KEY_LENGTH) {
+        throw new Error('Неверная длина ключа');
+      }
+      sha256hex(peerPubUint8).then((fp) => {
+        elements.peerFp.textContent = fp;
+      });
+      elements.peerPub.value = '';
       showToast('Ключ собеседника импортирован!');
-    } catch(e){ showToast('Неверный ключ!'); }
-  };
+      elements.plain.focus();
+    } catch (e) {
+      showToast('Неверный ключ: ' + e.message);
+    }
+  }
 
-  encryptBtn.onclick = ()=>{
-    let text = sanitizeInput(document.getElementById('plain').value.trim());
-    if(!text){ showToast('Введите сообщение!'); return; }
-    if(text.length > MAX_LENGTH){ showToast('Сообщение слишком длинное!'); return; }
-    const nonce = nacl.randomBytes(24);
-    const encrypted = nacl.box(utf8toUint(text), nonce, peerPubUint8, keyPair.secretKey);
-    document.getElementById('cipherout').value = toBase64(nonce)+':'+toBase64(encrypted);
+  function encryptMessage() {
+    let text = sanitizeInput(elements.plain.value.trim());
+    if (!text) {
+      showToast('Введите сообщение!');
+      return;
+    }
+    if (text.length > MAX_LENGTH) {
+      showToast('Сообщение слишком длинное!');
+      return;
+    }
+    if (!peerPubUint8) {
+      showToast('Импортируйте ключ собеседника!');
+      return;
+    }
+    const nonce = nacl.randomBytes(NONCE_LENGTH);
+    const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPubUint8, keyPair.secretKey);
+    elements.cipherout.value = toBase64(nonce) + ':' + toBase64(encrypted);
     showToast('Сообщение зашифровано!');
-    document.getElementById('plain').value='';
-  };
+    elements.plain.value = '';
+    elements.cipherout.focus();
+  }
 
-  decryptBtn.onclick = ()=>{
-    let data = sanitizeInput(document.getElementById('cipherin').value.trim());
-    if(!data){ showToast('Вставьте зашифрованное сообщение!'); return; }
-    try{
+  function decryptMessage() {
+    let data = sanitizeInput(elements.cipherin.value.trim());
+    if (!data) {
+      showToast('Вставьте зашифрованное сообщение!');
+      return;
+    }
+    if (data.length > MAX_LENGTH) {
+      showToast('Зашифрованное сообщение слишком длинное!');
+      return;
+    }
+    if (!peerPubUint8) {
+      showToast('Импортируйте ключ собеседника!');
+      return;
+    }
+    try {
       const [nonceB64, msgB64] = data.split(':');
       const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
-      if(!decrypted) throw new Error('Ошибка дешифровки');
-      document.getElementById('plainout').value = uintToUtf8(decrypted);
-      document.getElementById('cipherin').value='';
+      if (!decrypted) throw new Error('Ошибка дешифровки');
+      elements.plainout.value = sanitizeInput(nacl.util.encodeUTF8(decrypted));
+      elements.cipherin.value = '';
       showToast('Сообщение расшифровано!');
-    } catch(e){ showToast('Не удалось расшифровать!'); }
+    } catch (e) {
+      showToast('Не удалось расшифровать: ' + e.message);
+    }
+  }
+
+  function resetAll() {
+    keyPair = null;
+    peerPubUint8 = null;
+    localStorage.removeItem('keyPair');
+    elements.myPub.value = '';
+    elements.pubArea.style.display = 'none';
+    elements.myFp.textContent = '';
+    elements.peerPub.value = '';
+    elements.peerFp.textContent = '';
+    elements.plain.value = '';
+    elements.cipherout.value = '';
+    elements.cipherin.value = '';
+    elements.plainout.value = '';
+    importBtn.disabled = true;
+    encryptBtn.disabled = true;
+    decryptBtn.disabled = true;
+    showToast('Все данные очищены!');
+  }
+
+  genBtn.onclick = generateKeys;
+  importBtn.onclick = importPeerKey;
+  encryptBtn.onclick = encryptMessage;
+  decryptBtn.onclick = decryptMessage;
+  resetBtn.onclick = resetAll;
+  copyPubBtn.onclick = () => {
+    navigator.clipboard.writeText(elements.myPub.value)
+      .then(() => showToast('Публичный ключ скопирован!'))
+      .catch(() => showToast('Ошибка копирования!'));
+  };
+  copyCipherBtn.onclick = () => {
+    navigator.clipboard.writeText(elements.cipherout.value)
+      .then(() => showToast('Зашифрованное сообщение скопировано!'))
+      .catch(() => showToast('Ошибка копирования!'));
   };
 
+  elements.peerPub.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      importPeerKey();
+    }
+  });
+  elements.plain.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      encryptMessage();
+    }
+  });
+  elements.cipherin.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      decryptMessage();
+    }
+  });
+
   const tgIcon = document.querySelector('footer a img');
-  tgIcon.addEventListener('mouseover', () => tgIcon.style.transform = 'scale(1.2)');
-  tgIcon.addEventListener('mouseout', () => tgIcon.style.transform = 'scale(1)');
+  tgIcon.addEventListener('mouseover', () => (tgIcon.style.transform = 'scale(1.2)'));
+  tgIcon.addEventListener('mouseout', () => (tgIcon.style.transform = 'scale(1)'));
+
+  loadKeys();
 })();
 </script>
-
 </body>
 </html>
