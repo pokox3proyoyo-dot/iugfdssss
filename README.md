@@ -1,1 +1,1 @@
-qooo# iugfdssss
+This site and code perform the function of encrypting messages, has a certain level of protection for your messages and private keys, it is possible to save the public and private keys of the interlocutor so that you do not need to enter them again and again 
