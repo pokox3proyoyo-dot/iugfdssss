@@ -1,404 +1,288 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Secure Chat — Persistent Keys</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<style>
-/* --- styles (как раньше, с лёгкой оптимизацией) --- */
-body { font-family: Inter, sans-serif; background: linear-gradient(135deg,#2c003e,#5a006a,#ff5aab); min-height:100vh; color:#f5f5f5; margin:0; display:flex; flex-direction:column; align-items:center;}
-h1{margin-top:20px;color:#ffd6f7;text-shadow:0 2px 8px rgba(0,0,0,.5)}
-.container{width:92%;max-width:760px;margin:16px auto}
-.card{background:rgba(255,255,255,0.1);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 8px 20px rgba(0,0,0,.4);backdrop-filter:blur(4px);transition:transform .18s,box-shadow .18s}
-.card:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(0,0,0,.6)}
-textarea,input{width:100%;box-sizing:border-box;margin:6px 0;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,.14);color:#fff;font-family:monospace}
-button{background:linear-gradient(90deg,#ff5aab,#8a2be2);color:#fff;border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-weight:600;transition:transform .16s,box-shadow .16s}
-button:disabled{opacity:.5;cursor:not-allowed}
-button:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 8px 18px rgba(0,0,0,.45)}
-#toast-container{position:fixed;top:18px;right:18px;z-index:9999}
-.toast{background:rgba(255,255,255,.14);color:#fff;padding:10px 14px;border-radius:10px;margin-top:8px;box-shadow:0 6px 14px rgba(0,0,0,.5);backdrop-filter:blur(3px);transition:opacity .28s,transform .28s;opacity:0;transform:translateY(-12px)}
-.footer-icon{width:32px;height:32px;transition:transform .16s;cursor:pointer;margin:18px auto;display:block}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.small{font-size:.9rem;color:#e9d6ef;margin-top:6px}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.note{font-size:.82rem;color:#e6d5e9}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #2a003f, #0f001a);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    h1 { margin: 20px 0; }
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      backdrop-filter: blur(10px);
+    }
+    button {
+      background: #6c2b8f;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      margin: 6px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      transition: transform 0.2s, background 0.2s;
+    }
+    button:hover { transform: scale(1.05); background: #8e3ec6; }
+    input, textarea {
+      width: 90%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+    textarea { height: 80px; }
+    /* Toast */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.5s, transform 0.5s;
+      transform: translateY(-20px);
+      z-index: 1000;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* Footer Telegram */
+    footer {
+      width:100%; 
+      text-align:center; 
+      margin:24px 0;
+    }
+    footer img {
+      width:32px; 
+      height:32px; 
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    footer img:hover { transform: scale(1.2); }
+  </style>
 </head>
 <body>
+  <h1>🔐 Secure Chat</h1>
 
-<h1>Secure Chat 2.0 🔐</h1>
-<div class="container">
-
-  <!-- keys -->
   <div class="card">
-    <h2>Ключи — генерация и сохранение</h2>
-    <div class="controls">
-      <button id="gen">Сгенерировать пару ключей</button>
-      <button id="saveKey" disabled>Сохранить приватный ключ (пароль)</button>
-      <button id="loadKey" disabled>Загрузить приватный ключ (пароль)</button>
-      <button id="exportKey" disabled>Экспортировать зашифр. ключ</button>
-      <input id="importFile" type="file" accept=".json" style="display:none">
-      <button id="importKeyBtn">Импортировать зашифр. ключ (файл)</button>
+    <h2>Управление ключами</h2>
+    <button id="gen">Сгенерировать пару ключей</button>
+    
+    <!-- стрелка для аккордеона -->
+    <div style="text-align:center; margin-top:8px;">
+      <span id="toggleKeys" style="cursor:pointer; font-size:20px; user-select:none;">▼</span>
     </div>
-    <div id="pubArea" style="display:none;margin-top:12px">
-      <label>Ваш публичный ключ (копируйте и отправляйте):</label>
-      <textarea id="myPub" rows="3" readonly></textarea>
-      <div class="small">Отпечаток (SHA256, 16 hex): <code id="myFp"></code></div>
+
+    <!-- скрытый блок -->
+    <div id="advancedKeys" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease, padding 0.3s ease;">
+      <div style="margin-top:12px;">
+        <input type="text" id="importPriv" placeholder="Вставьте приватный ключ">
+        <button id="importPrivBtn">Импорт приватного ключа</button>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="savePrivBtn">Сохранить приватный ключ (пароль)</button>
+        <button id="loadPrivBtn">Загрузить приватный ключ (пароль)</button>
+      </div>
     </div>
-    <div class="small note">Приватный ключ хранится локально. Сохранение делает его зашифрованным паролем.</div>
   </div>
 
-  <!-- peer -->
   <div class="card">
     <h2>Публичный ключ собеседника</h2>
-    <textarea id="peerPub" rows="3" placeholder="Вставьте публичный ключ собеседника (автосохранение)"></textarea>
-    <div class="controls" style="margin-top:8px">
-      <button id="importPeer" disabled>Импортировать публичный ключ</button>
-      <button id="clearPeer">Очистить сохранённый ключ</button>
-    </div>
-    <div class="small note">Публичный ключ не секретен — мы сохраняем его локально для удобства.</div>
-    <div class="small">Отпечаток собеседника: <code id="peerFp"></code></div>
+    <input type="text" id="peerPub" placeholder="Вставьте публичный ключ">
+    <button id="importPeer">Импортировать публичный ключ</button>
+    <p>Отпечаток: <span id="peerFp">-</span></p>
+    <button id="clearPeer">Очистить сохранённый ключ</button>
   </div>
 
-  <!-- encrypt -->
   <div class="card">
-    <h2>Шифровать сообщение</h2>
-    <textarea id="plain" rows="3" placeholder="Введите сообщение"></textarea>
-    <div class="controls">
-      <button id="encryptBtn" disabled>Зашифровать и скопировать</button>
-      <button id="encryptOnly" disabled>Зашифровать (показать)</button>
-    </div>
-    <label>Зашифрованная строка (скопируйте/отправьте):</label>
-    <textarea id="cipherout" rows="3" readonly></textarea>
+    <h2>Сообщения</h2>
+    <textarea id="plain" placeholder="Введите сообщение..."></textarea><br>
+    <button id="encrypt">Зашифровать</button>
+    <textarea id="cipher" placeholder="Зашифрованный текст..."></textarea><br>
+    <button id="decrypt">Расшифровать</button>
   </div>
 
-  <!-- decrypt -->
-  <div class="card">
-    <h2>Дешифровать сообщение</h2>
-    <textarea id="cipherin" rows="3" placeholder="Вставьте зашифрованную строку (nonce:cipher)"></textarea>
-    <div class="controls">
-      <button id="decryptBtn" disabled>Дешифровать</button>
-      <button id="clearOut">Очистить поля</button>
-    </div>
-    <label>Расшифрованный текст:</label>
-    <textarea id="plainout" rows="3" readonly></textarea>
-  </div>
+  <div id="toast"></div>
 
-</div>
+  <footer>
+    <a href="https://t.me/BluzikArhimew" target="_blank">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
+    </a>
+  </footer>
 
-<div id="toast-container"></div>
-
-<footer>
-  <a href="https://t.me/BluzikArhimew" target="_blank" rel="noopener">
-    <img class="footer-icon" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="tg">
-  </a>
-</footer>
-
-<!-- libs -->
-<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
-
-<script>
-/*
-  Persistent keys enhancement
-  - store encrypted private key in localStorage under 'sc_encrypted_priv'
-  - store salt and iv in the JSON
-  - store peer public key in localStorage under 'sc_peer_pub'
-  - functions: saveEncryptedPrivate(pass), loadEncryptedPrivate(pass)
-  - UI buttons for save/load/export/import
-  - encryption: PBKDF2 -> AES-GCM (WebCrypto)
-*/
-
-(async function(){
-  const b64 = nacl.util.encodeBase64;
-  const fromB64 = nacl.util.decodeBase64;
-  const utf8ToU8 = nacl.util.decodeUTF8;
-  const u8ToUtf8 = nacl.util.encodeUTF8;
-
-  // helpers
-  function toast(msg, t=3000){
-    const container = document.getElementById('toast-container');
-    if(container.children.length >= 3) container.removeChild(container.children[0]);
-    const el = document.createElement('div');
-    el.className='toast';
-    el.textContent = sanitize(msg);
-    container.appendChild(el);
-    requestAnimationFrame(()=>{ el.style.opacity='1'; el.style.transform='translateY(0)' });
-    setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(-12px)'; el.addEventListener('transitionend', ()=>el.remove()); }, t);
-  }
-  function sanitize(s){ return String(s).replace(/[<>&"'`]/g,c=>({'<':'<','>':'>','&':'&','"':'"',"'" :"'","`":"`"}[c]||c)); }
-  function toBase64(u8){ return b64(u8); }
-  function fromBase64(s){ return fromB64(s); }
-  function saveLocal(key, val){ localStorage.setItem(key, val); }
-  function loadLocal(key){ return localStorage.getItem(key); }
-  function removeLocal(key){ localStorage.removeItem(key); }
-
-  // WebCrypto helpers: derive AES key from password via PBKDF2
-  async function deriveKeyFromPassword(password, salt, iterations=200000){
-    const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
-    const key = await crypto.subtle.deriveKey({
-      name:'PBKDF2',
-      salt,
-      iterations,
-      hash:'SHA-256'
-    }, keyMaterial, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
-    return key;
-  }
-
-  async function encryptSecretKey(secretUint8, password){
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const derived = await deriveKeyFromPassword(password, salt.buffer);
-    const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, derived, secretUint8);
-    return {
-      version:1,
-      salt: arrayBufferToB64(salt.buffer),
-      iv: arrayBufferToB64(iv.buffer),
-      ciphertext: arrayBufferToB64(ct)
+  <script>
+    // --- утилиты ---
+    const toBase64 = arr => btoa(String.fromCharCode(...new Uint8Array(arr)));
+    const fromBase64 = str => new Uint8Array(atob(str).split("").map(c => c.charCodeAt(0)));
+    const showToast = msg => {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'show';
+      setTimeout(() => toast.className = toast.className.replace('show',''), 3000);
     };
-  }
+    const sanitize = str => str.replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
 
-  async function decryptSecretKey(jsonObj, password){
-    const salt = b64ToArrayBuffer(jsonObj.salt);
-    const iv = b64ToArrayBuffer(jsonObj.iv);
-    const ct = b64ToArrayBuffer(jsonObj.ciphertext);
-    const derived = await deriveKeyFromPassword(password, new Uint8Array(salt));
-    const plainBuf = await crypto.subtle.decrypt({name:'AES-GCM', iv:new Uint8Array(iv)}, derived, ct);
-    return new Uint8Array(plainBuf);
-  }
+    // --- ключи ---
+    let privKey, pubKey, peerPub;
 
-  function arrayBufferToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-  function b64ToArrayBuffer(b64str){ const s = atob(b64str); const arr = new Uint8Array(s.length); for(let i=0;i<s.length;i++) arr[i]=s.charCodeAt(i); return arr.buffer; }
+    async function generateKeyPair() {
+      const keyPair = await crypto.subtle.generateKey({name:'ECDH', namedCurve:'P-256'}, true, ['deriveKey']);
+      privKey = keyPair.privateKey;
+      pubKey = keyPair.publicKey;
+      const raw = await crypto.subtle.exportKey('raw', pubKey);
+      const b64 = toBase64(raw);
+      prompt('Ваш публичный ключ (отправьте собеседнику):', b64);
+    }
 
-  // UI elems
-  const genBtn = document.getElementById('gen');
-  const saveKeyBtn = document.getElementById('saveKey');
-  const loadKeyBtn = document.getElementById('loadKey');
-  const exportKeyBtn = document.getElementById('exportKey');
-  const importKeyBtn = document.getElementById('importKeyBtn');
-  const importFileInput = document.getElementById('importFile');
+    // аккордеон
+    const toggleKeys = document.getElementById('toggleKeys');
+    const advancedKeys = document.getElementById('advancedKeys');
+    let keysOpen = false;
+    toggleKeys.addEventListener('click', () => {
+      keysOpen = !keysOpen;
+      if (keysOpen) {
+        advancedKeys.style.maxHeight = "500px";
+        advancedKeys.style.padding = "10px 0";
+        toggleKeys.textContent = "▲";
+      } else {
+        advancedKeys.style.maxHeight = "0";
+        advancedKeys.style.padding = "0";
+        toggleKeys.textContent = "▼";
+      }
+    });
 
-  const myPubTA = document.getElementById('myPub');
-  const myFp = document.getElementById('myFp');
+    // --- публичный ключ собеседника ---
+    async function sha256hex(buf) {
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
 
-  const peerPubTA = document.getElementById('peerPub');
-  const peerFp = document.getElementById('peerFp');
-  const importPeerBtn = document.getElementById('importPeer');
-  const clearPeerBtn = document.getElementById('clearPeer');
+    document.getElementById('importPeer').onclick = async () => {
+      const s = document.getElementById('peerPub').value.trim();
+      if (!s) { showToast('Вставьте публичный ключ'); return; }
+      try {
+        const raw = fromBase64(s);
+        peerPub = raw;
+        localStorage.setItem('peerPub', s);
+        document.getElementById('peerFp').textContent = await sha256hex(raw);
+        showToast('Публичный ключ собеседника сохранён');
+        document.getElementById('peerPub').value = '';
+      } catch { showToast('Неверный публичный ключ'); }
+    };
 
-  const plainTA = document.getElementById('plain');
-  const encryptBtn = document.getElementById('encryptBtn');
-  const encryptOnlyBtn = document.getElementById('encryptOnly');
-  const cipherOutTA = document.getElementById('cipherout');
+    // загрузка сохранённого публичного ключа
+    (async () => {
+      const saved = localStorage.getItem('peerPub');
+      if (saved) {
+        peerPub = fromBase64(saved);
+        document.getElementById('peerFp').textContent = await sha256hex(peerPub);
+      }
+    })();
 
-  const cipherInTA = document.getElementById('cipherin');
-  const decryptBtn = document.getElementById('decryptBtn');
-  const plainOutTA = document.getElementById('plainout');
-  const clearOutBtn = document.getElementById('clearOut');
+    document.getElementById('clearPeer').onclick = () => {
+      localStorage.removeItem('peerPub');
+      peerPub = null;
+      document.getElementById('peerFp').textContent = '-';
+      showToast('Ключ собеседника очищен');
+    };
 
-  // state
-  let keyPair = null; // {publicKey:Uint8Array, secretKey:Uint8Array}
-  let peerPub = null; // Uint8Array
+    // --- шифрование ---
+    async function deriveSecret() {
+      const peerKey = await crypto.subtle.importKey('raw', peerPub, {name:'ECDH', namedCurve:'P-256'}, true, []);
+      return crypto.subtle.deriveKey({name:'ECDH', public:peerKey}, privKey, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+    }
 
-  // load saved peer key if exists
-  const savedPeer = loadLocal('sc_peer_pub_b64');
-  if(savedPeer){
-    peerPubTA.value = savedPeer;
-    try{ peerPub = fromBase64(savedPeer); (async()=>{ peerFp.textContent = await sha256hex(peerPub); importPeerBtn.disabled=false; })(); }catch(e){}
-  }
+    document.getElementById('encrypt').onclick = async () => {
+      if (!privKey || !peerPub) return showToast('Нет ключей');
+      const msg = sanitize(document.getElementById('plain').value);
+      if (!msg) return;
+      const key = await deriveSecret();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const enc = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(msg));
+      document.getElementById('cipher').value = toBase64(iv) + ':' + toBase64(enc);
+      document.getElementById('plain').value = '';
+      showToast('Сообщение зашифровано');
+    };
 
-  // load encrypted private existence flag
-  const hasEnc = loadLocal('sc_enc_priv_json') !== null;
-  if(hasEnc){
-    loadKeyBtn.disabled=false; // let user load by password
-    exportKeyBtn.disabled=false;
-  }
+    document.getElementById('decrypt').onclick = async () => {
+      if (!privKey || !peerPub) return showToast('Нет ключей');
+      const val = document.getElementById('cipher').value.trim();
+      if (!val.includes(':')) return showToast('Неверный формат');
+      const [ivB64, dataB64] = val.split(':');
+      const key = await deriveSecret();
+      try {
+        const dec = await crypto.subtle.decrypt({name:'AES-GCM', iv:fromBase64(ivB64)}, key, fromBase64(dataB64));
+        document.getElementById('plain').value = new TextDecoder().decode(dec);
+        document.getElementById('cipher').value = '';
+        showToast('Сообщение расшифровано');
+      } catch { showToast('Ошибка при расшифровке'); }
+    };
 
-  // helpers: sha256 hex short
-  async function sha256hex(u8){
-    const h = await crypto.subtle.digest('SHA-256', u8);
-    const hex = Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    return hex.slice(0,32);
-  }
+    // --- кнопки ---
+    document.getElementById('gen').onclick = generateKeyPair;
+    document.getElementById('importPrivBtn').onclick = async () => {
+      try {
+        const val = document.getElementById('importPriv').value.trim();
+        if (!val) return showToast('Вставьте приватный ключ');
+        const raw = fromBase64(val);
+        privKey = await crypto.subtle.importKey('pkcs8', raw, {name:'ECDH', namedCurve:'P-256'}, true, ['deriveKey']);
+        showToast('Приватный ключ импортирован');
+        document.getElementById('importPriv').value = '';
+      } catch { showToast('Неверный приватный ключ'); }
+    };
 
-  // Generate keys
-  genBtn.onclick = async ()=>{
-    keyPair = nacl.box.keyPair();
-    myPubTA.value = toBase64(keyPair.publicKey);
-    myFp.textContent = await sha256hex(keyPair.publicKey);
-    // enable save/load buttons
-    saveKeyBtn.disabled=false;
-    loadKeyBtn.disabled=false;
-    exportKeyBtn.disabled=false;
-    encryptBtn.disabled = !!peerPub ? false : true;
-    encryptOnlyBtn.disabled = encryptBtn.disabled;
-    decryptBtn.disabled = false;
-    toast('Ключи сгенерированы');
-  };
+    // сохранение/загрузка приватного ключа через пароль
+    async function savePriv() {
+      if (!privKey) return showToast('Сначала сгенерируйте ключ');
+      const pw = prompt('Введите пароль для шифрования приватного ключа:');
+      if (!pw) return;
+      const raw = await crypto.subtle.exportKey('pkcs8', privKey);
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+      const aes = await crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, key, {name:'AES-GCM', length:256}, false, ['encrypt']);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const enc = await crypto.subtle.encrypt({name:'AES-GCM', iv}, aes, raw);
+      localStorage.setItem('privEnc', JSON.stringify({salt:toBase64(salt), iv:toBase64(iv), data:toBase64(enc)}));
+      showToast('Приватный ключ сохранён');
+    }
 
-  // Save encrypted private key (ask password)
-  saveKeyBtn.onclick = async ()=>{
-    if(!keyPair){ toast('Сначала сгенерируй ключи'); return; }
-    const pass = prompt('Придумайте пароль для шифрования приватного ключа (не короткий):');
-    if(!pass){ toast('Сохранение отменено'); return; }
-    try{
-      const obj = await encryptSecretKey(keyPair.secretKey, pass);
-      saveLocal('sc_enc_priv_json', JSON.stringify(obj));
-      loadKeyBtn.disabled=false;
-      exportKeyBtn.disabled=false;
-      toast('Приватный ключ сохранён и зашифрован локально');
-    }catch(e){ console.error(e); toast('Ошибка при сохранении ключа'); }
-  };
+    async function loadPriv() {
+      const data = localStorage.getItem('privEnc');
+      if (!data) return showToast('Нет сохранённого ключа');
+      const pw = prompt('Введите пароль для расшифровки приватного ключа:');
+      if (!pw) return;
+      try {
+        const obj = JSON.parse(data);
+        const salt = fromBase64(obj.salt);
+        const iv = fromBase64(obj.iv);
+        const enc = fromBase64(obj.data);
+        const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+        const aes = await crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:100000, hash:'SHA-256'}, key, {name:'AES-GCM', length:256}, false, ['decrypt']);
+        const raw = await crypto.subtle.decrypt({name:'AES-GCM', iv}, aes, enc);
+        privKey = await crypto.subtle.importKey('pkcs8', raw, {name:'ECDH', namedCurve:'P-256'}, true, ['deriveKey']);
+        showToast('Приватный ключ загружен');
+      } catch { showToast('Ошибка при расшифровке приватного ключа'); }
+    }
 
-  // Load encrypted private key (prompt password) — will set keyPair.secretKey and publicKey
-  loadKeyBtn.onclick = async ()=>{
-    const stored = loadLocal('sc_enc_priv_json');
-    if(!stored){ toast('Нет сохранённого ключа'); return; }
-    const pass = prompt('Введите пароль для расшифровки приватного ключа:');
-    if(!pass){ toast('Загрузка отменена'); return; }
-    try{
-      const parsed = JSON.parse(stored);
-      const secretU8 = await decryptSecretKey(parsed, pass);
-      // reconstruct keyPair: nacl expects secretKey 64 bytes for box.keyPair? tweetnacl.box.keyPair gives 32-byte secretKey (curve25519) but in nacl.box.keyPair secretKey is 32 bytes? In tweetnacl.js secretKey is 32 bytes for box.keyPair
-      // Usually nacl.box.keyPair().secretKey is 32 bytes.
-      // We need publicKey too: derive from secret
-      const pub = nacl.scalarMult.base(secretU8); // curve25519 base
-      keyPair = { publicKey: pub, secretKey: secretU8 };
-      myPubTA.value = toBase64(keyPair.publicKey);
-      myFp.textContent = await sha256hex(keyPair.publicKey);
-      toast('Приватный ключ загружен в память (секретно)');
-      // enable encryption buttons if peer is present
-      encryptBtn.disabled = peerPub ? false : true;
-      encryptOnlyBtn.disabled = encryptBtn.disabled;
-      decryptBtn.disabled = false;
-    }catch(e){ console.error(e); toast('Неверный пароль или повреждённый ключ'); }
-  };
-
-  // Export encrypted JSON file (download)
-  exportKeyBtn.onclick = async ()=>{
-    const stored = loadLocal('sc_enc_priv_json');
-    if(!stored){ toast('Нет зашифрованного ключа для экспорта'); return; }
-    const blob = new Blob([stored], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'securechat_key.json'; document.body.appendChild(a); a.click();
-    a.remove(); URL.revokeObjectURL(url);
-    toast('Файл загружен (скачивание)');
-  };
-
-  // Import encrypted key from file
-  importKeyBtn.onclick = ()=> importFileInput.click();
-  importFileInput.onchange = async (ev)=>{
-    const f = ev.target.files[0];
-    if(!f) return;
-    const txt = await f.text();
-    try{
-      JSON.parse(txt); // basic check
-      saveLocal('sc_enc_priv_json', txt);
-      loadKeyBtn.disabled = false; exportKeyBtn.disabled=false;
-      toast('Зашифрованный ключ импортирован в localStorage');
-    }catch(e){ toast('Файл не подходит'); }
-    importFileInput.value='';
-  };
-
-  // Peer key import/auto-save
-  peerPubTA.oninput = ()=>{
-    // user typing — don't auto parse yet; enable import button
-    importPeerBtn.disabled = peerPubTA.value.trim() === '';
-  };
-  importPeerBtn.onclick = async ()=>{
-    const s = peerPubTA.value.trim();
-    if(!s){ toast('Вставьте публичный ключ'); return; }
-    try{
-      const arr = fromBase64(s);
-      peerPub = arr;
-      saveLocal('sc_peer_pub_b64', s); // autosave
-      peerFp.textContent = await sha256hex(peerPub);
-      importPeerBtn.disabled = false;
-      encryptBtn.disabled = keyPair ? false : true;
-      encryptOnlyBtn.disabled = encryptBtn.disabled;
-      toast('Публичный ключ собеседника импортирован и сохранён');
-      peerPubTA.value='';
-    }catch(e){ toast('Ошибка: неверный публичный ключ'); }
-  };
-  clearPeerBtn.onclick = ()=>{
-    peerPub = null;
-    removeLocal('sc_peer_pub_b64');
-    peerPubTA.value=''; peerFp.textContent='';
-    encryptBtn.disabled = true; encryptOnlyBtn.disabled = true;
-    toast('Сохранённый публичный ключ удалён');
-  };
-
-  // encryption / decryption
-  encryptBtn.onclick = async ()=>{
-    if(!keyPair || !peerPub){ toast('Сначала сгенерируй/загрузи ключ и импортируй публичный ключ собеседника'); return; }
-    let text = (plainTA.value||'').trim();
-    if(!text){ toast('Введите сообщение'); return; }
-    if(text.length > 3000){ toast('Сообщение слишком длинное'); return; }
-    // sanitize only for output display; encryption uses raw text bytes
-    const nonce = nacl.randomBytes(24);
-    const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPub, keyPair.secretKey);
-    const token = toBase64(nonce)+':'+toBase64(encrypted);
-    cipherOutTA.value = token;
-    // copy to clipboard
-    try{ await navigator.clipboard.writeText(token); toast('Скопировано в буфер и готово к отправке'); } catch(e){ toast('Зашифровано — скопируйте вручную'); }
-    plainTA.value=''; // clear input
-  };
-
-  encryptOnlyBtn.onclick = ()=> {
-    // same but don't copy
-    if(!keyPair || !peerPub){ toast('Ключи не готовы'); return; }
-    let text = (plainTA.value||'').trim();
-    if(!text){ toast('Введите сообщение'); return; }
-    const nonce = nacl.randomBytes(24);
-    const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPub, keyPair.secretKey);
-    cipherOutTA.value = toBase64(nonce)+':'+toBase64(encrypted);
-    toast('Зашифровано (показано в поле)');
-    plainTA.value='';
-  };
-
-  decryptBtn.onclick = ()=>{
-    if(!keyPair){ toast('Сначала сгенерируй или загрузите приватный ключ'); return; }
-    const data = (cipherInTA.value||'').trim();
-    if(!data){ toast('Вставьте зашифрованную строку'); return; }
-    try{
-      const parts = data.split(':');
-      if(parts.length < 2) throw new Error('invalid');
-      const nonce = fromBase64(parts[0]);
-      const cipher = fromBase64(parts[1]);
-      // We need sender's public key: in NaCl.box scheme the sender used their secret and receiver's public
-      // For our UI we use peerPub as the other's public — but when decrypting a message sent to you by someone,
-      // the 'peerPub' should be the sender's public key. This design assumes you imported sender's public key earlier.
-      if(!peerPub){ toast('Сначала импортируйте публичный ключ отправителя'); return; }
-      const plainU8 = nacl.box.open(cipher, nonce, peerPub, keyPair.secretKey);
-      if(!plainU8) throw new Error('decrypt-failed');
-      plainOutTA.value = u8ToUtf8(plainU8);
-      cipherInTA.value='';
-      toast('Сообщение расшифровано');
-    }catch(e){ console.error(e); toast('Не удалось расшифровать — проверьте ключи/формат'); }
-  };
-
-  clearOutBtn.onclick = ()=>{ plainTA.value=''; cipherOutTA.value=''; cipherInTA.value=''; plainOutTA.value=''; toast('Поля очищены'); };
-
-  // small accessibility: enable/disable buttons based on state
-  function refreshButtons(){ 
-    saveKeyBtn.disabled = !keyPair;
-    loadKeyBtn.disabled = loadLocal('sc_enc_priv_json') ? false : true;
-    exportKeyBtn.disabled = loadLocal('sc_enc_priv_json') ? false : true;
-    importPeerBtn.disabled = peerPubTA.value.trim()==='';
-    encryptBtn.disabled = !(keyPair && peerPub);
-    encryptOnlyBtn.disabled = encryptBtn.disabled;
-    decryptBtn.disabled = !keyPair;
-  }
-  setInterval(refreshButtons, 800);
-
-  // derive public from secret (utility) - note: tweetnacl provides scalarMult.base
-  // Already used above via nacl.scalarMult.base
-
-})();
-</script>
-
+    document.getElementById('savePrivBtn').onclick = savePriv;
+    document.getElementById('loadPrivBtn').onclick = loadPriv;
+  </script>
 </body>
 </html>
