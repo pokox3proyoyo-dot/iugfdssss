@@ -216,8 +216,8 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
     const nonce = nacl.randomBytes(NONCE_LENGTH);
     const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPubUint8, keyPair.secretKey);
     elements.cipherout.value = toBase64(nonce) + ':' + toBase64(encrypted);
+    elements.plain.value = ''; // Очистка поля ввода после шифрования
     showToast('Сообщение зашифровано!');
-    elements.plain.value = '';
     elements.cipherout.focus();
   }
 
@@ -240,7 +240,7 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
       const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
       if (!decrypted) throw new Error('Ошибка дешифровки');
       elements.plainout.value = sanitizeInput(nacl.util.encodeUTF8(decrypted));
-      elements.cipherin.value = '';
+      elements.cipherin.value = ''; // Очистка поля ввода после дешифрования
       showToast('Сообщение расшифровано!');
     } catch (e) {
       showToast('Не удалось расшифровать: ' + e.message);
@@ -270,7 +270,6 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   importBtn.onclick = importPeerKey;
   encryptBtn.onclick = encryptMessage;
   decryptBtn.onclick = decryptMessage;
-  resetBtn.onclick = resetAll;
   copyPubBtn.onclick = () => {
     navigator.clipboard.writeText(elements.myPub.value)
       .then(() => showToast('Публичный ключ скопирован!'))
