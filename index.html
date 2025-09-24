@@ -31,21 +31,6 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 .toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(3px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
 footer { width:100%; text-align:center; margin:24px 0; }
 footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer; }
-.arrow-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; margin-top: 8px; transition: transform 0.2s; }
-.arrow-btn:hover { transform: scale(1.2); }
-
-/* Плавный аккордеон */
-.collapsible {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.3s ease;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-}
-.collapsible.open {
-  max-height: 200px; /* регулируется под содержимое */
-}
 </style>
 </head>
 <body>
@@ -56,12 +41,6 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   <div class="card">
     <h2>1️⃣ Сгенерировать пару ключей</h2>
     <button id="gen">Сгенерировать ключи</button>
-    <button class="arrow-btn" id="togglePriv">&#9660;</button>
-    <div id="privControls" class="collapsible">
-      <button id="savePrivBtn">Сохранить приватный ключ (пароль)</button>
-      <button id="loadPrivBtn">Загрузить приватный ключ</button>
-      <input type="password" id="privPass" placeholder="Введите пароль для сохранения/загрузки">
-    </div>
     <div id="pubArea" style="display:none" class="flex-col">
       <label>Ваш публичный ключ:</label>
       <textarea id="myPub" rows="3" readonly></textarea>
@@ -147,11 +126,6 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
   const importBtn = document.getElementById('importPeer');
   const encryptBtn = document.getElementById('encryptBtn');
   const decryptBtn = document.getElementById('decryptBtn');
-  const togglePrivBtn = document.getElementById('togglePriv');
-  const privControls = document.getElementById('privControls');
-
-  // Аккордеон приватного ключа
-  togglePrivBtn.onclick = () => { privControls.classList.toggle('open'); };
 
   genBtn.onclick = async ()=>{
     keyPair = nacl.box.keyPair();
