@@ -1,12 +1,11 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Secure Chat 2.0 🔐 + AI</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Secure Chat 2.0 🔐</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-/* --- Основное оформление (не трогал) --- */
 body {
   font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, #2c003e, #5a006a, #ff5aab);
@@ -24,6 +23,7 @@ h1 { margin-top: 24px; font-size: 2rem; color: #ffd6f7; text-shadow: 0 2px 8px r
 textarea, input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-family: monospace; font-size: 0.95rem;}
 button { background: linear-gradient(90deg, #ff5aab, #8a2be2); color: #fff; border: none; border-radius: 12px; padding: 12px 18px; margin-top: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;}
 button:hover { background: linear-gradient(90deg, #ff75c4, #a64ddb); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); filter: brightness(1.1);}
+button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.4);}
 pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 0.85rem; color: #fff;}
 .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .flex-col { display:flex; flex-direction:column;}
@@ -31,100 +31,12 @@ pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; ove
 .toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(3px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
 footer { width:100%; text-align:center; margin:24px 0; }
 footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer; }
-
-/* --- AI chat slideout (справа) --- */
-#aiChatBox {
-  position: fixed;
-  top: 0;
-  right: -360px; /* скрыт по умолчанию */
-  width: 360px;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(10,6,18,0.96), rgba(6,2,14,0.96));
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  transition: right 0.32s cubic-bezier(.2,.9,.3,1);
-  box-shadow: -8px 0 30px rgba(0,0,0,0.6);
-  z-index: 9999;
-  border-left: 2px solid rgba(255,90,171,0.22);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-}
-/* тонкая видимая полоса справа, чтобы пользователь знал про чат */
-#aiChatBox.closed::after{
-  content: '';
-  position: absolute;
-  left: -10px;
-  top: 40%;
-  width: 10px;
-  height: 120px;
-  background: linear-gradient(180deg, #ff5aab, #8a2be2);
-  border-radius: 6px 0 0 6px;
-  box-shadow: -6px 0 12px rgba(0,0,0,0.4);
-}
-
-/* when open */
-#aiChatBox.open { right: 0; }
-
-/* header */
-#aiChatHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-#aiChatHeader h3 { margin:0; font-size:1rem; color:#ffd6f7; }
-#aiChatHeader button { background:none; border:none; color:#fff; font-size:18px; cursor:pointer; }
-
-/* messages and input */
-#aiChatMessages { flex:1; overflow-y:auto; padding:12px; font-size:0.92rem; }
-.ai-msg { margin-bottom:10px; line-height:1.3; padding:8px 10px; border-radius:10px; }
-.ai-msg.user { background: rgba(255,255,255,0.05); color: #fff; text-align:right; }
-.ai-msg.bot { background: rgba(160,247,255,0.06); color: #a0f7ff; text-align:left; }
-#aiChatInputArea { display:flex; gap:8px; padding:10px; border-top:1px solid rgba(255,255,255,0.02); }
-#aiChatInput { flex:1; padding:10px; border-radius:10px; border:none; background:rgba(255,255,255,0.06); color:#fff; }
-#aiChatSend { padding:10px 14px; border-radius:10px; border:none; background: linear-gradient(90deg,#ff5aab,#8a2be2); cursor:pointer; color:#fff; }
-
-/* small 'ask AI' button bottom right that opens chat */
-#askAIBtn {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 9998;
-  border-radius: 12px;
-  padding: 10px 14px;
-  background: linear-gradient(90deg,#ff5aab,#8a2be2);
-  color:#fff; border:none; cursor:pointer; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
 </style>
 </head>
 <body>
 
-<!-- AI chat slideout box -->
-<div id="aiChatBox" class="closed" aria-hidden="true">
-  <div id="aiChatHeader">
-    <h3>ИИ-чат</h3>
-    <div>
-      <button id="minimizeAI" title="Свернуть">━</button>
-      <button id="closeAI" title="Закрыть">✖</button>
-    </div>
-  </div>
-
-  <div id="aiChatMessages" role="log" aria-live="polite"></div>
-
-  <div id="aiChatInputArea">
-    <input id="aiChatInput" placeholder="Спроси ИИ..." autocomplete="off" />
-    <button id="aiChatSend">➤</button>
-  </div>
-</div>
-
-<!-- visible button bottom-right -->
-<button id="askAIBtn">Спроси ИИ</button>
-
-<!-- main page content (шифрование) -->
 <h1>Secure Chat 2.0 🔐</h1>
 <div class="container">
-
   <div class="card">
     <h2>1️⃣ Сгенерировать пару ключей</h2>
     <button id="resetBtn">Очистить всё</button>
@@ -166,134 +78,15 @@ footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer
 <div id="toast-container"></div>
 
 <footer>
-  <a href="https://t.me/BluzikArhimew" target="_blank" rel="noopener">
+  <a href="https://t.me/BluzikArhimew" target="_blank">
     <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
   </a>
 </footer>
 
-<!-- libs (crypto) -->
 <script defer src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
-
 <script>
-
-const AI_API_KEY = "AIzaSyAKdnh3OIRvOJzlxaRcSeyt7tZvh-Df2-w"; 
-const AI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"; 
-const AI_MODEL = "gemini-flash"; 
-
-/* ----------------- AI chat UI behavior ----------------- */
-document.addEventListener('DOMContentLoaded', ()=> {
-  const aiBox = document.getElementById('aiChatBox');
-  const askAIBtn = document.getElementById('askAIBtn');
-  const aiInput = document.getElementById('aiChatInput');
-  const aiSend = document.getElementById('aiChatSend');
-  const aiMsgs = document.getElementById('aiChatMessages');
-  const minimizeAI = document.getElementById('minimizeAI');
-  const closeAI = document.getElementById('closeAI');
-
-  // open/close helpers
-  function openAIChat(){
-    aiBox.classList.add('open'); aiBox.classList.remove('closed'); aiBox.setAttribute('aria-hidden','false');
-    aiInput.focus();
-  }
-  function closeAIChat(){
-    aiBox.classList.remove('open'); aiBox.classList.add('closed'); aiBox.setAttribute('aria-hidden','true');
-  }
-
-  // clickable visible tab: clicking small left-visible stripe opens chat
-  // Add click area: when closed user can click that stripe (we use event on aiBox)
-  aiBox.addEventListener('click', (e)=>{
-    // if closed and user clicks the visible stripe area (left -10..0 px),
-    // but click inside area may be tricky; allow opening by click near right edge of window too:
-    if(!aiBox.classList.contains('open')){
-      openAIChat();
-      e.stopPropagation();
-    }
-  });
-
-  askAIBtn.addEventListener('click', openAIChat);
-  minimizeAI.addEventListener('click', ()=> aiBox.classList.toggle('open'));
-  closeAI.addEventListener('click', closeAIChat);
-
-  // helper to append message
-  function appendMsg(text, who='bot'){
-    const d = document.createElement('div');
-    d.className = 'ai-msg ' + (who==='user' ? 'user' : 'bot');
-    d.textContent = text;
-    aiMsgs.appendChild(d);
-    aiMsgs.scrollTop = aiMsgs.scrollHeight;
-  }
-
-  // simple rate-limiter UI
-  let isWaiting = false;
-  async function sendToAI(promptText){
-    if(!promptText) return;
-    if(!AI_API_KEY || AI_API_KEY.trim().length===0){
-      appendMsg('Ошибка: API ключ не задан в коде.', 'bot');
-      return;
-    }
-    if(isWaiting){
-      appendMsg('Пожалуйста, дождитесь ответа...', 'bot'); return;
-    }
-    appendMsg(promptText, 'user');
-    aiInput.value = '';
-    isWaiting = true;
-    aiSend.disabled = true;
-
-    try {
-      // Example request for OpenAI Chat Completions.
-      // If your provider (Gemini) uses different format/endpoint, replace body/URL accordingly.
-      const body = {
-        model: AI_MODEL,
-        messages: [{role:'user', content: promptText}],
-        max_tokens: 800,
-        temperature: 0.2
-      };
-
-      const res = await fetch(AI_API_URL, {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + AI_API_KEY
-        },
-        body: JSON.stringify(body)
-      });
-
-      if(!res.ok){
-        const txt = await res.text();
-        appendMsg('Ошибка API: ' + res.status + ' — ' + txt, 'bot');
-      } else {
-        const data = await res.json();
-        // try common chat response extraction (OpenAI chat completions)
-        let answer = '';
-        if(data && data.choices && data.choices.length){
-          answer = data.choices[0].message?.content ?? JSON.stringify(data.choices[0]);
-        } else if(data && data.output && typeof data.output === 'string') {
-          // some providers return output
-          answer = data.output;
-        } else {
-          answer = JSON.stringify(data).slice(0,1000);
-        }
-        appendMsg(answer, 'bot');
-      }
-    } catch(err){
-      appendMsg('Ошибка запроса: ' + (err.message || err), 'bot');
-    } finally {
-      isWaiting = false;
-      aiSend.disabled = false;
-    }
-  }
-
-  aiSend.addEventListener('click', ()=> sendToAI(aiInput.value.trim()));
-  aiInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendToAI(aiInput.value.trim()); } });
-
-  // close on Esc
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeAIChat(); }});
-});
-
-/* ----------------- Encryption UI + logic (unchanged features) ----------------- */
 (async function () {
-  // elements map
   const elements = {
     myPub: document.getElementById('myPub'),
     pubArea: document.getElementById('pubArea'),
@@ -352,39 +145,31 @@ document.addEventListener('DOMContentLoaded', ()=> {
   function loadKeys() {
     const savedKeyPair = localStorage.getItem('keyPair');
     if (savedKeyPair) {
-      try {
-        const parsed = JSON.parse(savedKeyPair);
-        keyPair = { publicKey: fromBase64(parsed.publicKey), secretKey: fromBase64(parsed.secretKey) };
-        elements.myPub.value = toBase64(keyPair.publicKey);
-        elements.pubArea.style.display = 'flex';
-        sha256hex(keyPair.publicKey).then((fp) => {
-          elements.myFp.textContent = fp;
-        });
-        importBtn.disabled = false;
-        encryptBtn.disabled = false;
-        decryptBtn.disabled = false;
-      } catch(e){
-        console.error('Load key error', e);
-      }
-    }
-    // load saved peer public key (optional)
-    const savedPeer = localStorage.getItem('peerPub_b64');
-    if(savedPeer){
-      elements.peerPub.value = savedPeer;
-      try{ peerPubUint8 = fromBase64(savedPeer); sha256hex(peerPubUint8).then(fp=>elements.peerFp.textContent=fp); importBtn.disabled=false; }catch(e){}
+      keyPair = JSON.parse(savedKeyPair);
+      keyPair.publicKey = fromBase64(keyPair.publicKey);
+      keyPair.secretKey = fromBase64(keyPair.secretKey);
+      elements.myPub.value = toBase64(keyPair.publicKey);
+      elements.pubArea.style.display = 'flex';
+      sha256hex(keyPair.publicKey).then((fp) => {
+        elements.myFp.textContent = fp;
+      });
+      importBtn.disabled = false;
+      encryptBtn.disabled = false;
+      decryptBtn.disabled = false;
     }
   }
 
   function generateKeys() {
     keyPair = nacl.box.keyPair();
-    // save to localStorage (base64)
     localStorage.setItem('keyPair', JSON.stringify({
       publicKey: toBase64(keyPair.publicKey),
       secretKey: toBase64(keyPair.secretKey),
     }));
     elements.myPub.value = toBase64(keyPair.publicKey);
     elements.pubArea.style.display = 'flex';
-    sha256hex(keyPair.publicKey).then((fp) => { elements.myFp.textContent = fp; });
+    sha256hex(keyPair.publicKey).then((fp) => {
+      elements.myFp.textContent = fp;
+    });
     importBtn.disabled = false;
     encryptBtn.disabled = false;
     decryptBtn.disabled = false;
@@ -394,13 +179,18 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
   function importPeerKey() {
     let s = sanitizeInput(elements.peerPub.value.trim());
-    if (!s) { showToast('Вставьте публичный ключ!'); return; }
+    if (!s) {
+      showToast('Вставьте публичный ключ!');
+      return;
+    }
     try {
-      const bytes = fromBase64(s);
-      if(!(bytes && bytes.length === PUBLIC_KEY_LENGTH)) throw new Error('Неверная длина ключа');
-      peerPubUint8 = bytes;
-      sha256hex(peerPubUint8).then((fp) => { elements.peerFp.textContent = fp; });
-      localStorage.setItem('peerPub_b64', s); // save peer pub for next time
+      peerPubUint8 = fromBase64(s);
+      if (peerPubUint8.length !== PUBLIC_KEY_LENGTH) {
+        throw new Error('Неверная длина ключа');
+      }
+      sha256hex(peerPubUint8).then((fp) => {
+        elements.peerFp.textContent = fp;
+      });
       elements.peerPub.value = '';
       showToast('Ключ собеседника импортирован!');
       elements.plain.focus();
@@ -410,59 +200,110 @@ document.addEventListener('DOMContentLoaded', ()=> {
   }
 
   function encryptMessage() {
-    let text = elements.plain.value.trim();
-    if(!text){ showToast('Введите сообщение!'); return; }
-    if(text.length > MAX_LENGTH){ showToast('Сообщение слишком длинное!'); return; }
-    if(!peerPubUint8){ showToast('Импортируйте ключ собеседника!'); return; }
+    let text = sanitizeInput(elements.plain.value.trim());
+    if (!text) {
+      showToast('Введите сообщение!');
+      return;
+    }
+    if (text.length > MAX_LENGTH) {
+      showToast('Сообщение слишком длинное!');
+      return;
+    }
+    if (!peerPubUint8) {
+      showToast('Импортируйте ключ собеседника!');
+      return;
+    }
     const nonce = nacl.randomBytes(NONCE_LENGTH);
     const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPubUint8, keyPair.secretKey);
     elements.cipherout.value = toBase64(nonce) + ':' + toBase64(encrypted);
-    elements.plain.value = ''; // auto-clear after encrypt
+    elements.plain.value = ''; // Очистка поля ввода после шифрования
     showToast('Сообщение зашифровано!');
+    elements.cipherout.focus();
   }
 
   function decryptMessage() {
-    let data = elements.cipherin.value.trim();
-    if(!data){ showToast('Вставьте зашифрованное сообщение!'); return; }
-    if(!peerPubUint8){ showToast('Импортируйте ключ собеседника!'); return; }
+    let data = sanitizeInput(elements.cipherin.value.trim());
+    if (!data) {
+      showToast('Вставьте зашифрованное сообщение!');
+      return;
+    }
+    if (data.length > MAX_LENGTH) {
+      showToast('Зашифрованное сообщение слишком длинное!');
+      return;
+    }
+    if (!peerPubUint8) {
+      showToast('Импортируйте ключ собеседника!');
+      return;
+    }
     try {
       const [nonceB64, msgB64] = data.split(':');
       const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
-      if(!decrypted) throw new Error('Ошибка дешифровки');
-      elements.plainout.value = nacl.util.encodeUTF8(decrypted);
-      elements.cipherin.value = ''; // auto-clear after decrypt
+      if (!decrypted) throw new Error('Ошибка дешифровки');
+      elements.plainout.value = sanitizeInput(nacl.util.encodeUTF8(decrypted));
+      elements.cipherin.value = ''; // Очистка поля ввода после дешифрования
       showToast('Сообщение расшифровано!');
-    } catch(e){
-      showToast('Не удалось расшифровать: ' + (e.message||''));
+    } catch (e) {
+      showToast('Не удалось расшифровать: ' + e.message);
     }
   }
 
   function resetAll() {
-    keyPair = null; peerPubUint8 = null;
+    keyPair = null;
+    peerPubUint8 = null;
     localStorage.removeItem('keyPair');
-    localStorage.removeItem('peerPub_b64');
-    elements.myPub.value=''; elements.pubArea.style.display='none'; elements.myFp.textContent='';
-    elements.peerPub.value=''; elements.peerFp.textContent='';
-    elements.plain.value=''; elements.cipherout.value=''; elements.cipherin.value=''; elements.plainout.value='';
-    importBtn.disabled = true; encryptBtn.disabled = true; decryptBtn.disabled = true;
+    elements.myPub.value = '';
+    elements.pubArea.style.display = 'none';
+    elements.myFp.textContent = '';
+    elements.peerPub.value = '';
+    elements.peerFp.textContent = '';
+    elements.plain.value = '';
+    elements.cipherout.value = '';
+    elements.cipherin.value = '';
+    elements.plainout.value = '';
+    importBtn.disabled = true;
+    encryptBtn.disabled = true;
+    decryptBtn.disabled = true;
     showToast('Все данные очищены!');
   }
 
-  // buttons
-  genBtn.addEventListener('click', generateKeys);
-  importBtn.addEventListener('click', importPeerKey);
-  encryptBtn.addEventListener('click', encryptMessage);
-  decryptBtn.addEventListener('click', decryptMessage);
-  resetBtn.addEventListener('click', resetAll);
-  copyPubBtn.addEventListener('click', ()=> navigator.clipboard.writeText(elements.myPub.value).then(()=>showToast('Публичный ключ скопирован!')).catch(()=>showToast('Ошибка копирования')));
-  copyCipherBtn.addEventListener('click', ()=> navigator.clipboard.writeText(elements.cipherout.value).then(()=>showToast('Зашифрованное сообщение скопировано!')).catch(()=>showToast('Ошибка копирования')));
+  genBtn.onclick = generateKeys;
+  importBtn.onclick = importPeerKey;
+  encryptBtn.onclick = encryptMessage;
+  decryptBtn.onclick = decryptMessage;
+  copyPubBtn.onclick = () => {
+    navigator.clipboard.writeText(elements.myPub.value)
+      .then(() => showToast('Публичный ключ скопирован!'))
+      .catch(() => showToast('Ошибка копирования!'));
+  };
+  copyCipherBtn.onclick = () => {
+    navigator.clipboard.writeText(elements.cipherout.value)
+      .then(() => showToast('Зашифрованное сообщение скопировано!'))
+      .catch(() => showToast('Ошибка копирования!'));
+  };
 
-  // Enter shortcuts
-  elements.peerPub.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); importPeerKey(); }});
-  elements.plain.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); encryptMessage(); }});
-  elements.cipherin.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); decryptMessage(); }});
+  elements.peerPub.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      importPeerKey();
+    }
+  });
+  elements.plain.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      encryptMessage();
+    }
+  });
+  elements.cipherin.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      decryptMessage();
+    }
+  });
 
-  // load saved keys if any
+  const tgIcon = document.querySelector('footer a img');
+  tgIcon.addEventListener('mouseover', () => (tgIcon.style.transform = 'scale(1.2)'));
+  tgIcon.addEventListener('mouseout', () => (tgIcon.style.transform = 'scale(1)'));
+
   loadKeys();
 })();
 </script>
