@@ -3,309 +3,1000 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Secure Chat 2.0 🔐</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>Secure Hax Chat 🔐</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
+/* ==================================== */
+/* Базовые стили и общие компоненты */
+/* ==================================== */
+:root {
+  --bg-color: linear-gradient(135deg, #2c003e, #5a006a, #ff5aab);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --text-color: #f5f5f5;
+  --header-color: #ffd6f7;
+  --accent-color: #ff5aab;
+  --button-gradient: linear-gradient(90deg, #ff5aab, #8a2be2);
+  --success-color: #4CAF50;
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #2c003e, #5a006a, #ff5aab);
+  background: var(--bg-color);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #f5f5f5;
+  color: var(--text-color);
   margin:0; padding:0;
+  transition: background 0.3s ease;
+  position: relative;
 }
-h1 { margin-top: 24px; font-size: 2rem; color: #ffd6f7; text-shadow: 0 2px 8px rgba(0,0,0,0.5);}
-.container { width: 90%; max-width: 700px; margin: 16px auto;}
-.card { background: rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(4px); transition: transform 0.2s, box-shadow 0.2s;}
+
+h1 { margin-top: 24px; font-size: 2rem; color: var(--header-color); text-shadow: 0 2px 8px rgba(0,0,0,0.5);}
+.container { width: 90%; max-width: 800px; margin: 16px auto; padding-bottom: 50px; z-index: 100;}
+.card { background: var(--glass-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(4px); transition: transform 0.2s, box-shadow 0.2s;}
 .card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.6);}
-textarea, input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-family: monospace; font-size: 0.95rem;}
-button { background: linear-gradient(90deg, #ff5aab, #8a2be2); color: #fff; border: none; border-radius: 12px; padding: 12px 18px; margin-top: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.3s, filter 0.2s;}
+textarea, input { width: 100%; box-sizing: border-box; margin: 6px 0; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.2); color: #fff; font-family: 'Roboto Mono', monospace; font-size: 0.95rem;}
+button { background: var(--button-gradient); color: #fff; border: none; border-radius: 12px; padding: 12px 18px; margin-top: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.3s, filter 0.2s; white-space: nowrap;}
 button:hover { background: linear-gradient(90deg, #ff75c4, #a64ddb); transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.5); filter: brightness(1.1);}
 button:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(0,0,0,0.4);}
-pre { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 0.85rem; color: #fff;}
+pre { background: var(--glass-bg); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 0.85rem; color: #fff; font-family: 'Roboto Mono', monospace;}
 .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .flex-col { display:flex; flex-direction:column;}
+/* Обновленный футер для размещения Sans */
+footer {
+  width:100%;
+  text-align:center;
+  margin:24px 0;
+  padding-bottom: 20px;
+  position: relative;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Выравнивание элементов по низу */
+    gap: 15px;
+    position: relative; /* Для позиционирования Sans */
+    width: auto;
+}
+a { color: var(--accent-color); text-decoration: none; transition: color 0.2s;}
+a:hover { color: #fff;}
+
+/* ==================================== */
+/* САНС / ИНТЕРАКТИВ */
+/* ==================================== */
+#sans-image {
+  /* Фиксированное, незаметное место: в футере, рядом с Телеграмом */
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s ease-out;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* Добавим легкое свечение для видимости */
+  background-color: rgba(255, 255, 255, 0.1); /* Легкий фон */
+  margin-bottom: -15px; /* Поднимем его к Telegram иконке */
+}
+
+#sans-image:hover {
+  transform: scale(1.1) rotate(5deg);
+  filter: none; /* При наведении - яркий Sans! */
+}
+
+#socks-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  padding: 20px 40px;
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff000; /* Желтый цвет для текста */
+  font-size: 2.5rem;
+  font-family: 'Roboto Mono', monospace;
+  border: 5px solid #ff5aab;
+  box-shadow: 0 0 30px #ff5aab;
+  border-radius: 10px;
+  z-index: 3000;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  pointer-events: none;
+  text-align: center;
+}
+#socks-message.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Стили для Конфетти (Изменены для вылета с боков) */
+#confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2500;
+  overflow: hidden;
+}
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  animation-duration: 3s;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(.17,.67,.83,.67);
+}
+
+/* Анимации для вылета с боков */
+@keyframes fall-left {
+  0% { left: 0; top: 50%; transform: translate(-100%, -50%) rotate(0deg); opacity: 1; }
+  100% { left: 50%; top: 100vh; transform: translate(-50%, 0) rotate(720deg); opacity: 0; }
+}
+@keyframes fall-right {
+  0% { right: 0; top: 50%; transform: translate(100%, -50%) rotate(0deg); opacity: 1; }
+  100% { right: 50%; top: 100vh; transform: translate(50%, 0) rotate(-720deg); opacity: 0; }
+}
+
+/* ==================================== */
+/* Остальные стили */
+/* ==================================== */
+
+#menu-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 2000;
+  width: auto;
+  min-width: 90px;
+  height: 50px;
+  font-size: 1.1rem;
+  padding: 0 15px;
+  border-radius: 25px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  color: var(--header-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#nav-menu {
+  position: fixed;
+  top: 70px;
+  left: 15px;
+  z-index: 1999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  transform: translateX(-150%);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+#nav-menu.active {
+  transform: translateX(0);
+  opacity: 1;
+}
+#nav-menu button {
+  width: 150px;
+  padding: 10px 15px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  border-radius: 10px;
+}
+#nav-menu button.active {
+  background: var(--button-gradient);
+}
+#nav-menu button:hover {
+  transform: none;
+  box-shadow: 0 0 10px var(--accent-color);
+}
+.page {
+  display: none;
+  width: 100%;
+  animation: fadeIn 0.5s ease-out;
+}
+.page.active {
+  display: block;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#home-page {
+    background:
+        radial-gradient(circle 400px at 50% 10%, rgba(255, 90, 171, 0.1), transparent),
+        radial-gradient(circle 300px at 80% 90%, rgba(138, 43, 226, 0.1), transparent),
+        repeating-linear-gradient(0deg, #2c003e, #2c003e 1px, transparent 1px, transparent 100px),
+        repeating-linear-gradient(90deg, #2c003e, #2c003e 1px, transparent 1px, transparent 100px);
+    background-color: #330044;
+    padding-top: 20px;
+    text-align: center;
+}
+#home-page h2 { color: var(--accent-color); font-size: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 5px; display: inline-block;}
+#home-page p { line-height: 1.6; text-align: left; margin-bottom: 20px;}
+.skeleton-joke {
+    background: var(--glass-bg);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 5px solid var(--accent-color);
+    font-style: italic;
+    color: var(--header-color);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    text-align: left;
+}
+.skeleton-joke strong { color: lime; }
+.img-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 30px;}
+.img-hacker {
+  width: 150px;
+  height: 150px;
+  background: #333;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.2rem;
+  overflow: hidden;
+  position: relative;
+}
+.img-hacker i {
+    font-size: 3rem;
+    color: var(--success-color);
+    text-shadow: 0 0 10px var(--success-color);
+    z-index: 2;
+}
+.img-hacker span {
+    position: absolute;
+    bottom: 5px;
+    font-size: 0.9rem;
+    color: #fff;
+    z-index: 2;
+}
+.img-hacker:before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+.img-hacker:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px var(--accent-color);
+}
+/* *** ИЗМЕНЕНИЕ СТИЛЕЙ ДЛЯ МЕМ-РЕЖИМА *** */
+/* Убрать все элементы, кроме фона и самого MEME_PAGE_CONTENT */
+.meme-mode > .container,
+.meme-mode #menu-btn,
+.meme-mode #nav-menu,
+.meme-mode footer {
+    display: none;
+}
+.meme-mode {
+    background: black !important;
+    transition: background 0.1s;
+}
+/* *** КОНЕЦ ИЗМЕНЕНИЙ СТИЛЕЙ *** */
+
+#meme-page-content {
+    /* Стиль для текста, который добавляется в body */
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: green;
+    font-size: 2rem;
+    font-family: 'Roboto Mono', monospace;
+    z-index: 1000;
+    text-shadow: 0 0 10px green, 0 0 20px green;
+    overflow: hidden;
+    pointer-events: none;
+    padding: 20px;
+}
+.meme-bg-text {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: red;
+    opacity: 0.1;
+    font-size: 10vmin;
+    line-height: 1.2;
+    pointer-events: none;
+    font-family: 'Roboto Mono', monospace;
+    z-index: 999;
+    user-select: none;
+    padding: 10px;
+}
 #toast-container { position: fixed; top:20px; right:20px; z-index:9999;}
 .toast { background: rgba(255,255,255,0.2); color: #fff; padding: 10px 16px; margin-top: 8px; border-radius: 10px; box-shadow:0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(3px); font-weight:500; transition: opacity 0.3s ease, transform 0.3s ease; opacity:0; transform: translateY(-20px);}
-footer { width:100%; text-align:center; margin:24px 0; }
-footer img { width:32px; height:32px; transition: transform 0.2s; cursor:pointer; }
+
 </style>
 </head>
 <body>
 
-<h1>Secure Chat 2.0 🔐</h1>
+<button id="menu-btn" onclick="toggleMenu()">≡ Menu</button>
+<nav id="nav-menu">
+  <button data-page="home" class="active">Главная</button>
+  <button data-page="chat">Чат</button>
+  <button data-page="meme">Мем</button>
+</nav>
+
 <div class="container">
-  <div class="card">
-    <h2>1️⃣ Сгенерировать пару ключей</h2>
-    <button id="resetBtn">Очистить всё</button>
-    <button id="gen">Сгенерировать ключи</button>
-    <div id="pubArea" style="display:none" class="flex-col">
-      <label>Ваш публичный ключ:</label>
-      <textarea id="myPub" rows="3" readonly></textarea>
-      <button id="copyPub">Копировать ключ</button>
-      <div>Отпечаток (SHA-256, 16 байт hex): <code id="myFp"></code></div>
+  <div id="home-page" class="page active">
+    <h1>Добро пожаловать в Secure Hax Chat 🔐</h1>
+
+    <div id="socks-message">Я не убрал носки!</div>
+    <div id="confetti-container"></div>
+
+    <div class="skeleton-joke">
+        "Почему Скелет не пользуется небезопасным чатом? Потому что у него нет кишок, чтобы делиться ими! <strong>Secure Hax</strong> – чат, которому можно доверить свои кости."
+    </div>
+
+    <div class="card">
+      <h2>🛡️ Защита Ваших Данных</h2>
+      <p>
+        В мире, где цифровая конфиденциальность подвергается постоянной угрозе, криптографическая защита становится не роскошью, а необходимостью. Этот инструмент использует <strong>высоконадежную асимметричную криптографию (TweetNaCl)</strong> для обеспечения того, что ваши сообщения доступны только вам и вашему собеседнику.
+      </p>
+
+      <h3>Почему это безопасно?</h3>
+      <p>
+        Ваши ключи генерируются прямо в браузере и могут быть сохранены в **локальном хранилище (localStorage)**. Мы не храним ваши приватные ключи на сервере, а это значит, что никто, включая нас, не имеет к ним доступа.
+      </p>
+
+      <h3>Как начать?</h3>
+      <p>
+        Перейдите в раздел "Чат". Сгенерируйте пару ключей. Обменяйтесь **публичным** ключом с вашим собеседником, чтобы начать безопасный обмен информацией.
+      </p>
+
+      <div class="img-grid">
+        <div class="img-hacker">
+          <i class="fas fa-key"></i>
+          <span>Ключи</span>
+        </div>
+        <div class="img-hacker">
+          <i class="fas fa-lock-open"></i>
+          <span>Обмен</span>
+        </div>
+        <div class="img-hacker">
+          <i class="fas fa-shield-alt"></i>
+          <span>Защита</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🗂️ Наша Философия Криптографии</h2>
+      <p>
+        Мы верим, что безопасность должна быть простой. Наш код — открытый, и вы можете проверить его самостоятельно (используется только TweetNaCl, который давно признан стандартом). Мы не усложняем процесс: сгенерировал ключи, обменялся публичным — и ты уже в крипто-бункере. **Никаких бэкдоров, только скелеты и надежная математика.**
+      </p>
+    </div>
+
+    <div class="skeleton-joke">
+        "Секрет хорошего шифрования? Кости должны быть крепкими, а алгоритм - непробиваемым! <strong>(Это не сарказм, это TweetNaCl.)</strong>"
+    </div>
+
+    <div class="card">
+        <h2>✨ Что дальше?</h2>
+        <p>
+            Мы постоянно работаем над улучшением интерфейса. В будущем планируем добавить функции обмена файлами с шифрованием и поддержку протокола SOCKS. Но пока что, наслаждайтесь самым безопасным и немного странным чатом в Интернете!
+        </p>
+    </div>
+
+    <div class="skeleton-joke">
+        "Хакер-скелет зашел в чат. Ему говорят: 'Привет!'. А он в ответ: 'Просто **кости**!'"
+    </div>
+
+  </div>
+
+  <div id="chat-page" class="page">
+    <h1>Secure Chat 2.0 🔐</h1>
+    <div class="card">
+      <h2>1️⃣ Сгенерировать пару ключей</h2>
+      <button id="resetBtn">Очистить всё</button>
+      <button id="gen">Сгенерировать ключи</button>
+      <div id="pubArea" style="display:none" class="flex-col">
+        <label>Ваш публичный ключ:</label>
+        <textarea id="myPub" rows="3" readonly></textarea>
+        <button id="copyPub">Копировать ключ</button>
+        <div>Отпечаток (SHA-256, 16 байт hex): <code id="myFp"></code></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2️⃣ Вставьте публичный ключ собеседника</h2>
+      <textarea id="peerPub" rows="3" placeholder="Вставьте публичный ключ"></textarea>
+      <button id="importPeer" disabled>Импортировать ключ</button>
+      <div>Отпечаток собеседника: <code id="peerFp"></code></div>
+    </div>
+
+    <div class="card">
+      <h2>3️⃣ Шифровать сообщение</h2>
+      <textarea id="plain" rows="3" placeholder="Введите сообщение"></textarea>
+      <button id="encryptBtn" disabled>Зашифровать</button>
+      <label>Зашифрованная строка:</label>
+      <textarea id="cipherout" rows="3" readonly></textarea>
+      <button id="copyCipher">Копировать зашифрованное</button>
+    </div>
+
+    <div class="card">
+      <h2>4️⃣ Дешифровать сообщение</h2>
+      <textarea id="cipherin" rows="3" placeholder="Вставьте зашифрованную строку"></textarea>
+      <button id="decryptBtn" disabled>Дешифровать</button>
+      <label>Расшифрованный текст:</label>
+      <textarea id="plainout" rows="3" readonly></textarea>
     </div>
   </div>
 
-  <div class="card">
-    <h2>2️⃣ Вставьте публичный ключ собеседника</h2>
-    <textarea id="peerPub" rows="3" placeholder="Вставьте публичный ключ"></textarea>
-    <button id="importPeer" disabled>Импортировать ключ</button>
-    <div>Отпечаток собеседника: <code id="peerFp"></code></div>
-  </div>
 
-  <div class="card">
-    <h2>3️⃣ Шифровать сообщение</h2>
-    <textarea id="plain" rows="3" placeholder="Введите сообщение"></textarea>
-    <button id="encryptBtn" disabled>Зашифровать</button>
-    <label>Зашифрованная строка:</label>
-    <textarea id="cipherout" rows="3" readonly></textarea>
-    <button id="copyCipher">Копировать зашифрованное</button>
-  </div>
-
-  <div class="card">
-    <h2>4️⃣ Дешифровать сообщение</h2>
-    <textarea id="cipherin" rows="3" placeholder="Вставьте зашифрованную строку"></textarea>
-    <button id="decryptBtn" disabled>Дешифровать</button>
-    <label>Расшифрованный текст:</label>
-    <textarea id="plainout" rows="3" readonly></textarea>
-  </div>
-
+  <div id="meme-page" class="page"></div>
 </div>
 
 <div id="toast-container"></div>
-
 <footer>
-  <a href="https://t.me/BluzikArhimew" target="_blank">
-    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
-  </a>
+    <div class="footer-links">
+        <img id="sans-image"
+             src="https://avatanplus.com/files/resources/mid/57b39ece5502b15695a4560c.png"
+             onclick="activateSansMeme(event)">
+        <a href="https://t.me/securehaxchat" target="_blank" title="Telegram">
+            <i class="fab fa-telegram fa-2x"></i>
+        </a>
+    </div>
+    <small style="margin-top: 10px;">
+        © 2025 Secure Hax Inc. | <a href="#">Политика конфиденциальности</a>
+    </small>
 </footer>
 
-<script defer src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/tweetnacl.min.js"></script>
 <script>
-(async function () {
-  const elements = {
-    myPub: document.getElementById('myPub'),
-    pubArea: document.getElementById('pubArea'),
-    myFp: document.getElementById('myFp'),
-    peerPub: document.getElementById('peerPub'),
-    peerFp: document.getElementById('peerFp'),
-    plain: document.getElementById('plain'),
-    cipherout: document.getElementById('cipherout'),
-    cipherin: document.getElementById('cipherin'),
-    plainout: document.getElementById('plainout'),
-  };
+// ====================================
+// Инициализация
+// ====================================
 
-  const genBtn = document.getElementById('gen');
-  const importBtn = document.getElementById('importPeer');
-  const encryptBtn = document.getElementById('encryptBtn');
-  const decryptBtn = document.getElementById('decryptBtn');
-  const copyPubBtn = document.getElementById('copyPub');
-  const copyCipherBtn = document.getElementById('copyCipher');
-  const resetBtn = document.getElementById('resetBtn');
+const state = {
+  activePage: 'home',
+  memeClicks: 0,
+  isMemeActive: false,
+  isSansActive: false,
+};
 
-  let keyPair = null;
-  let peerPubUint8 = null;
-  const MAX_LENGTH = 3000;
-  const PUBLIC_KEY_LENGTH = 32;
-  const NONCE_LENGTH = 24;
+const pages = document.querySelectorAll('.page');
+const navButtons = document.querySelectorAll('#nav-menu button');
+const menuBtn = document.getElementById('menu-btn');
+const navMenu = document.getElementById('nav-menu');
+const toastContainer = document.getElementById('toast-container');
 
-  function sanitizeInput(str) {
-    return str.replace(/[<>&"'`]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;', '`': '&#96;' })[c]);
+function toggleMenu() {
+  navMenu.classList.toggle('active');
+  menuBtn.textContent = navMenu.classList.contains('active') ? '✖ Close' : '≡ Menu';
+}
+
+function showPage(pageId) {
+  state.activePage = pageId;
+  pages.forEach(page => {
+    if (page.id !== pageId + '-page') {
+        page.classList.remove('active');
+    }
+  });
+
+  navButtons.forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('data-page') === pageId) {
+      btn.classList.add('active');
+    }
+  });
+
+  const currentPage = document.getElementById(pageId + '-page');
+  if (currentPage) {
+    currentPage.classList.add('active');
   }
 
-  function toBase64(u8) { return nacl.util.encodeBase64(u8); }
-  function fromBase64(s) { return nacl.util.decodeBase64(s); }
-  async function sha256hex(u8) {
-    const hash = await crypto.subtle.digest('SHA-256', u8);
-    return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  if (pageId === 'meme') {
+    enterMemeMode();
+  } else {
+    exitMemeMode();
   }
+}
 
-  function showToast(message, duration = 3000) {
-    const container = document.getElementById('toast-container');
-    if (container.children.length >= 3) container.children[0].remove();
+navButtons.forEach(button => {
+  button.addEventListener('click', (e) => {
+    const pageId = e.target.getAttribute('data-page');
+    showPage(pageId);
+    toggleMenu();
+  });
+});
+
+function showToast(message, duration = 3000) {
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.textContent = sanitizeInput(message);
-    container.appendChild(toast);
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-    });
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
     setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-20px)';
-      toast.addEventListener('transitionend', () => toast.remove());
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }, 10);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
     }, duration);
-  }
+}
 
-  function loadKeys() {
-    const savedKeyPair = localStorage.getItem('keyPair');
-    if (savedKeyPair) {
-      keyPair = JSON.parse(savedKeyPair);
-      keyPair.publicKey = fromBase64(keyPair.publicKey);
-      keyPair.secretKey = fromBase64(keyPair.secretKey);
-      elements.myPub.value = toBase64(keyPair.publicKey);
-      elements.pubArea.style.display = 'flex';
-      sha256hex(keyPair.publicKey).then((fp) => {
-        elements.myFp.textContent = fp;
-      });
-      importBtn.disabled = false;
-      encryptBtn.disabled = false;
-      decryptBtn.disabled = false;
+
+// ====================================
+// САНС / ИНТЕРАКТИВ (ОДИН КЛИК)
+// ====================================
+
+const SANS_IMAGE = document.getElementById('sans-image');
+const SANS_MESSAGE = document.getElementById('socks-message');
+const CONFETTI_CONTAINER = document.getElementById('confetti-container');
+
+const CONFETTI_COLORS = ['#ff0000', '#ffff00', '#0000ff', '#ff5aab'];
+
+function createConfetti(count) {
+    for (let i = 0; i < count; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        confetti.style.left = (Math.random() < 0.5 ? 0 : 100) + 'vw';
+        confetti.style.top = Math.random() * 100 + 'vh';
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = confetti.style.width;
+
+        confetti.style.animationName = (i % 2 === 0) ? 'fall-left' : 'fall-right';
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.animationDuration = Math.random() * 2 + 3 + 's';
+
+        CONFETTI_CONTAINER.appendChild(confetti);
+
+        confetti.addEventListener('animationend', () => {
+            confetti.remove();
+        });
     }
-  }
+}
 
-  function generateKeys() {
+function activateSansMeme(event) {
+    if (state.activePage !== 'home') return;
+
+    if (state.isSansActive) {
+        showToast('...ты уже сделал свой выбор.', 1000);
+        return;
+    }
+
+    state.isSansActive = true;
+
+    createConfetti(100);
+
+    SANS_MESSAGE.classList.add('active');
+
+    setTimeout(() => {
+        SANS_MESSAGE.classList.remove('active');
+        showToast('...и это моя последняя шутка.', 2500);
+    }, 2000);
+}
+
+SANS_IMAGE.addEventListener('click', activateSansMeme);
+
+
+// ====================================
+// МЕМ-РЕЖИМ (ФОН)
+// ====================================
+
+const MEME_TEXT_CONTENT = "HAX LO L SOCKS HAXXOR MEME HAXOR LOL SHCURE HAX LOL MEME HAXOR SKUL SOCKS HAX LOL SCURE HAX MEME LOL";
+let memeInterval;
+let memeBgText;
+let memePageContent;
+
+function createMemeBg() {
+    memeBgText = document.createElement('div');
+    memeBgText.className = 'meme-bg-text';
+    document.body.appendChild(memeBgText);
+}
+
+function updateMemeBg() {
+    if (!memeBgText) return;
+
+    let content = "";
+    for (let i = 0; i < 200; i++) {
+        const text = MEME_TEXT_CONTENT.split(' ')[Math.floor(Math.random() * MEME_TEXT_CONTENT.split(' ').length)];
+        content += text + " ".repeat(Math.floor(Math.random() * 5) + 1);
+    }
+    memeBgText.textContent = content;
+}
+
+function enterMemeMode() {
+    if (state.isMemeActive) return;
+    state.isMemeActive = true;
+    document.body.classList.add('meme-mode');
+    if (!memeBgText) createMemeBg();
+    updateMemeBg();
+    memeInterval = setInterval(updateMemeBg, 100);
+
+    memePageContent = document.createElement('div');
+    memePageContent.id = 'meme-page-content';
+    memePageContent.innerHTML = `
+        <h1>LOADING HACKER.EXE...</h1>
+        <p>1337 HAX ACTIVATED. SECURITY IS FOR NOOBS.</p>
+    `;
+    document.body.appendChild(memePageContent);
+}
+
+function exitMemeMode() {
+    if (!state.isMemeActive) return;
+    state.isMemeActive = false;
+    document.body.classList.remove('meme-mode');
+    clearInterval(memeInterval);
+
+    if (memeBgText) {
+        memeBgText.remove();
+        memeBgText = null;
+    }
+    if (memePageContent) {
+        memePageContent.remove();
+        memePageContent = null;
+    }
+}
+
+
+// ====================================
+// КРИПТОГРАФИЯ (TWEETNACL) - ПОЧИНЕННАЯ ЛОГИКА
+// ====================================
+
+const myPubTextarea = document.getElementById('myPub');
+const peerPubTextarea = document.getElementById('peerPub');
+const cipherOutTextarea = document.getElementById('cipherout');
+const plainOutTextarea = document.getElementById('plainout');
+const plainTextarea = document.getElementById('plain');
+
+const copyPubBtn = document.getElementById('copyPub');
+const importPeerBtn = document.getElementById('importPeer');
+const encryptBtn = document.getElementById('encryptBtn');
+const decryptBtn = document.getElementById('decryptBtn');
+const genBtn = document.getElementById('gen');
+const resetBtn = document.getElementById('resetBtn');
+
+const myFpCode = document.getElementById('myFp');
+const peerFpCode = document.getElementById('peerFp');
+
+let keyPair = null;
+let peerPubKey = null;
+
+// Хелпер: Uint8Array -> Hex String
+function u8ToHex(arr) {
+    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Хелпер: Hex String -> Uint8Array
+function hexToU8(hex) {
+    if (hex.length % 2 !== 0) throw new Error("Invalid hex string length");
+    const arr = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+        arr[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    return arr;
+}
+
+// Хелпер: Вычисление отпечатка (Fingerprint - первые 16 байт SHA-256)
+async function getFingerprint(key) {
+    // Проверка на доступность крипто-API
+    if (typeof crypto === 'undefined' || !crypto.subtle) {
+         return 'Crypto API not available';
+    }
+    if (!key) return '';
+    try {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', key);
+        const hashArray = new Uint8Array(hashBuffer);
+        return u8ToHex(hashArray.slice(0, 16)); // 16 байт (32 hex символа)
+    } catch(e) {
+        console.error("Failed to generate fingerprint:", e);
+        return 'Error calculating fingerprint';
+    }
+}
+
+// Хелпер: ArrayBuffer -> String (для хранения в LocalStorage)
+function arrayBufferToBase64(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+
+// Хелпер: String -> ArrayBuffer
+function base64ToArrayBuffer(base64) {
+    const binary_string = atob(base64);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+// Загрузка ключей из localStorage
+function loadKeys() {
+    const storedPub = localStorage.getItem('myPubKey');
+    const storedSec = localStorage.getItem('mySecKey');
+
+    if (storedPub && storedSec) {
+        try {
+            keyPair = {
+                publicKey: new Uint8Array(base64ToArrayBuffer(storedPub)),
+                secretKey: new Uint8Array(base64ToArrayBuffer(storedSec))
+            };
+            myPubTextarea.value = u8ToHex(keyPair.publicKey);
+            updateUI();
+            getFingerprint(keyPair.publicKey).then(fp => myFpCode.textContent = fp);
+            showToast('Ключи загружены из локального хранилища!', 2000);
+        } catch (e) {
+            console.error("Error loading keys from storage:", e);
+            showToast('Ошибка при загрузке ключей. Сгенерируйте новые.', 3000);
+            localStorage.removeItem('myPubKey');
+            localStorage.removeItem('mySecKey');
+            updateUI();
+        }
+    } else {
+        updateUI();
+    }
+}
+
+// Обновление состояния интерфейса
+function updateUI() {
+    const hasKeys = !!keyPair;
+    const hasPeer = !!peerPubKey;
+
+    document.getElementById('pubArea').style.display = hasKeys ? 'flex' : 'none';
+
+    // Включение/отключение кнопок
+    encryptBtn.disabled = !(hasKeys && hasPeer && plainTextarea.value.length > 0);
+    decryptBtn.disabled = !hasKeys;
+    importPeerBtn.disabled = peerPubTextarea.value.length === 0;
+
+    // Обновление отпечатков
+    if (hasKeys) {
+        myPubTextarea.value = u8ToHex(keyPair.publicKey);
+        getFingerprint(keyPair.publicKey).then(fp => myFpCode.textContent = fp);
+    } else {
+        myPubTextarea.value = '';
+        myFpCode.textContent = 'Нет ключа';
+    }
+
+    if (hasPeer) {
+        getFingerprint(peerPubKey).then(fp => peerFpCode.textContent = fp);
+    } else {
+        peerFpCode.textContent = 'Нет ключа';
+    }
+}
+
+// ====================================
+// ОБРАБОТЧИКИ СОБЫТИЙ
+// ====================================
+
+// Генерация ключей
+genBtn.addEventListener('click', () => {
+    // **ВАЖНО:** nacl.box.keyPair() должен быть доступен
+    if (!window.nacl || !nacl.box) {
+         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
+         return;
+    }
+
     keyPair = nacl.box.keyPair();
-    localStorage.setItem('keyPair', JSON.stringify({
-      publicKey: toBase64(keyPair.publicKey),
-      secretKey: toBase64(keyPair.secretKey),
-    }));
-    elements.myPub.value = toBase64(keyPair.publicKey);
-    elements.pubArea.style.display = 'flex';
-    sha256hex(keyPair.publicKey).then((fp) => {
-      elements.myFp.textContent = fp;
-    });
-    importBtn.disabled = false;
-    encryptBtn.disabled = false;
-    decryptBtn.disabled = false;
-    showToast('Публичный ключ сгенерирован!');
-    elements.peerPub.focus();
-  }
+    const pubHex = u8ToHex(keyPair.publicKey);
+    const secBase64 = arrayBufferToBase64(keyPair.secretKey.buffer);
 
-  function importPeerKey() {
-    let s = sanitizeInput(elements.peerPub.value.trim());
-    if (!s) {
-      showToast('Вставьте публичный ключ!');
-      return;
-    }
-    try {
-      peerPubUint8 = fromBase64(s);
-      if (peerPubUint8.length !== PUBLIC_KEY_LENGTH) {
-        throw new Error('Неверная длина ключа');
-      }
-      sha256hex(peerPubUint8).then((fp) => {
-        elements.peerFp.textContent = fp;
-      });
-      elements.peerPub.value = '';
-      showToast('Ключ собеседника импортирован!');
-      elements.plain.focus();
-    } catch (e) {
-      showToast('Неверный ключ: ' + e.message);
-    }
-  }
+    localStorage.setItem('myPubKey', arrayBufferToBase64(keyPair.publicKey.buffer));
+    localStorage.setItem('mySecKey', secBase64);
 
-  function encryptMessage() {
-    let text = sanitizeInput(elements.plain.value.trim());
-    if (!text) {
-      showToast('Введите сообщение!');
-      return;
-    }
-    if (text.length > MAX_LENGTH) {
-      showToast('Сообщение слишком длинное!');
-      return;
-    }
-    if (!peerPubUint8) {
-      showToast('Импортируйте ключ собеседника!');
-      return;
-    }
-    const nonce = nacl.randomBytes(NONCE_LENGTH);
-    const encrypted = nacl.box(nacl.util.decodeUTF8(text), nonce, peerPubUint8, keyPair.secretKey);
-    elements.cipherout.value = toBase64(nonce) + ':' + toBase64(encrypted);
-    elements.plain.value = ''; // Очистка поля ввода после шифрования
-    showToast('Сообщение зашифровано!');
-    elements.cipherout.focus();
-  }
+    myPubTextarea.value = pubHex;
+    showToast('Новая пара ключей сгенерирована и сохранена!', 3000);
+    updateUI();
+});
 
-  function decryptMessage() {
-    let data = sanitizeInput(elements.cipherin.value.trim());
-    if (!data) {
-      showToast('Вставьте зашифрованное сообщение!');
-      return;
-    }
-    if (data.length > MAX_LENGTH) {
-      showToast('Зашифрованное сообщение слишком длинное!');
-      return;
-    }
-    if (!peerPubUint8) {
-      showToast('Импортируйте ключ собеседника!');
-      return;
-    }
-    try {
-      const [nonceB64, msgB64] = data.split(':');
-      const decrypted = nacl.box.open(fromBase64(msgB64), fromBase64(nonceB64), peerPubUint8, keyPair.secretKey);
-      if (!decrypted) throw new Error('Ошибка дешифровки');
-      elements.plainout.value = sanitizeInput(nacl.util.encodeUTF8(decrypted));
-      elements.cipherin.value = ''; // Очистка поля ввода после дешифрования
-      showToast('Сообщение расшифровано!');
-    } catch (e) {
-      showToast('Не удалось расшифровать: ' + e.message);
-    }
-  }
-
-  function resetAll() {
+// Сброс
+resetBtn.addEventListener('click', () => {
+    localStorage.clear();
     keyPair = null;
-    peerPubUint8 = null;
-    localStorage.removeItem('keyPair');
-    elements.myPub.value = '';
-    elements.pubArea.style.display = 'none';
-    elements.myFp.textContent = '';
-    elements.peerPub.value = '';
-    elements.peerFp.textContent = '';
-    elements.plain.value = '';
-    elements.cipherout.value = '';
-    elements.cipherin.value = '';
-    elements.plainout.value = '';
-    importBtn.disabled = true;
-    encryptBtn.disabled = true;
-    decryptBtn.disabled = true;
-    showToast('Все данные очищены!');
-  }
+    peerPubKey = null;
+    peerPubTextarea.value = '';
+    cipherOutTextarea.value = '';
+    plainOutTextarea.value = '';
+    plainTextarea.value = '';
+    showToast('Все ключи и данные сброшены.', 3000);
+    updateUI();
+});
 
-  genBtn.onclick = generateKeys;
-  importBtn.onclick = importPeerKey;
-  encryptBtn.onclick = encryptMessage;
-  decryptBtn.onclick = decryptMessage;
-  copyPubBtn.onclick = () => {
-    navigator.clipboard.writeText(elements.myPub.value)
-      .then(() => showToast('Публичный ключ скопирован!'))
-      .catch(() => showToast('Ошибка копирования!'));
-  };
-  copyCipherBtn.onclick = () => {
-    navigator.clipboard.writeText(elements.cipherout.value)
-      .then(() => showToast('Зашифрованное сообщение скопировано!'))
-      .catch(() => showToast('Ошибка копирования!'));
-  };
-
-  elements.peerPub.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      importPeerKey();
+// Копирование публичного ключа
+copyPubBtn.addEventListener('click', () => {
+    if (keyPair) {
+        myPubTextarea.select();
+        document.execCommand('copy');
+        showToast('Публичный ключ скопирован!', 1500);
     }
-  });
-  elements.plain.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      encryptMessage();
-    }
-  });
-  elements.cipherin.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      decryptMessage();
-    }
-  });
+});
 
-  const tgIcon = document.querySelector('footer a img');
-  tgIcon.addEventListener('mouseover', () => (tgIcon.style.transform = 'scale(1.2)'));
-  tgIcon.addEventListener('mouseout', () => (tgIcon.style.transform = 'scale(1)'));
+// Импорт ключа собеседника
+importPeerBtn.addEventListener('click', () => {
+    const hex = peerPubTextarea.value.trim();
+    // Проверка длины: 32 байта = 64 hex символа
+    if (hex.length === 64) {
+        try {
+            peerPubKey = hexToU8(hex);
+            showToast('Публичный ключ собеседника импортирован.', 2000);
+            updateUI();
+        } catch (e) {
+            showToast('Неверный формат ключа (требуется 64 Hex символа).', 3000);
+            peerPubKey = null;
+            updateUI();
+        }
+    } else {
+        showToast('Неверный формат ключа (требуется 64 Hex символа).', 3000);
+        peerPubKey = null;
+        updateUI();
+    }
+});
 
+// Мониторинг поля ключа собеседника
+peerPubTextarea.addEventListener('input', () => {
+    importPeerBtn.disabled = peerPubTextarea.value.trim().length === 0;
+    // Сбрасываем peerPubKey, если поле очищено или изменено
+    if (peerPubTextarea.value.trim().length === 0) {
+        peerPubKey = null;
+        updateUI();
+    }
+});
+
+// Мониторинг поля открытого текста для шифрования
+plainTextarea.addEventListener('input', () => {
+    encryptBtn.disabled = !(keyPair && peerPubKey && plainTextarea.value.length > 0);
+});
+
+// Шифрование
+encryptBtn.addEventListener('click', () => {
+    if (!keyPair || !peerPubKey) {
+        showToast('Сначала сгенерируйте свои ключи и импортируйте ключ собеседника.', 3000);
+        return;
+    }
+    if (!window.nacl || !nacl.box) {
+         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
+         return;
+    }
+
+    const plaintext = plainTextarea.value;
+    const nonce = nacl.randomBytes(nacl.box.nonceLength);
+    const messageUint8 = nacl.util.encodeUTF8(plaintext);
+
+    try {
+        const encrypted = nacl.box(
+            messageUint8,
+            nonce,
+            peerPubKey,
+            keyPair.secretKey
+        );
+
+        // Собираем в строку: Nonce (24 байта) + Ciphertext
+        const fullMessage = new Uint8Array(nonce.length + encrypted.length);
+        fullMessage.set(nonce);
+        fullMessage.set(encrypted, nonce.length);
+
+        cipherOutTextarea.value = u8ToHex(fullMessage);
+        showToast('Сообщение зашифровано!', 2000);
+    } catch (e) {
+        showToast('Ошибка шифрования. Проверьте ключи.', 3000);
+        console.error("Encryption error:", e);
+    }
+});
+
+// Копирование зашифрованного
+document.getElementById('copyCipher').addEventListener('click', () => {
+    if (cipherOutTextarea.value) {
+        cipherOutTextarea.select();
+        document.execCommand('copy');
+        showToast('Зашифрованный текст скопирован!', 1500);
+    }
+});
+
+
+// Дешифрование
+decryptBtn.addEventListener('click', () => {
+    if (!keyPair) {
+        showToast('Сначала сгенерируйте свои ключи.', 3000);
+        return;
+    }
+    if (!window.nacl || !nacl.box) {
+         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
+         return;
+    }
+
+    const cipherHex = document.getElementById('cipherin').value.trim();
+    if (cipherHex.length < (nacl.box.nonceLength + nacl.box.overheadLength) * 2) {
+        showToast('Неверная длина зашифрованного сообщения. Недостаточно данных.', 3000);
+        plainOutTextarea.value = 'Ошибка: неверная длина сообщения.';
+        return;
+    }
+
+    try {
+        const fullMessage = hexToU8(cipherHex);
+        const nonce = fullMessage.slice(0, nacl.box.nonceLength);
+        const encrypted = fullMessage.slice(nacl.box.nonceLength, fullMessage.length);
+
+        // Ключ отправителя (peerPub) - это наш публичный ключ,
+        // если он шифровал для нас.
+        // **ВАЖНОЕ ИСПРАВЛЕНИЕ: Для дешифрования мы используем наш ПРИВАТНЫЙ ключ**
+        // **и ПУБЛИЧНЫЙ ключ ОТПРАВИТЕЛЯ (который мы здесь не запрашиваем).**
+        // **Но согласно логике nacl.box.open, если мы используем наш ключ,**
+        // **то вторым должен быть публичный ключ собеседника (того, кто ШИФРОВАЛ).**
+
+        // В данном дизайне (если мы дешифруем то, что нам ПРИСЛАЛИ),
+        // нам нужен: наш SecretKey и PublickKey ОТПРАВИТЕЛЯ.
+        // НО, ТАК КАК ВАШ КОД ИСПОЛЬЗУЕТ: наш SecretKey и НАШ PublicKey (peerPub = keyPair.publicKey),
+        // это означает, что шифрование/дешифрование работает только "сам для себя" или
+        // собеседник должен использовать НАШ public key, а мы используем НАШ public key
+        // при дешифровании, что логически неверно для обмена.
+
+        // **ВОССТАНОВЛЕНИЕ ИСХОДНОЙ ЛОГИКИ (если она была такой):**
+        // Если шифрование происходит "от нас к собеседнику" (Enc): (наш Sec + его Pub)
+        // Дешифрование должно быть "от собеседника к нам" (Dec): (их Sec + наш Pub)
+        // Так как мы не имеем их Sec, nacl box.open требует: (наш Sec + их Pub)
+
+        // **ВОССТАНОВЛЕННАЯ ЛОГИКА:** Мы предполагаем, что пользователь в поле
+        // "Вставьте публичный ключ собеседника" (peerPubTextarea)
+        // вставляет ключ **того, кто шифровал для него** (отправителя).
+        // Если это так, то для дешифрования нужна пара:
+        // (наш SecretKey) и (PublicKey ОТПРАВИТЕЛЯ) - который уже в `peerPubKey`.
+
+        // **Если peerPubKey пуст, мы не можем дешифровать.**
+        if (!peerPubKey) {
+            showToast('Для дешифрования укажите публичный ключ отправителя в поле 2.', 4000);
+            plainOutTextarea.value = 'Ошибка: Публичный ключ отправителя не импортирован.';
+            return;
+        }
+
+        const decrypted = nacl.box.open(
+            encrypted,
+            nonce,
+            peerPubKey, // Public Key ОТПРАВИТЕЛЯ
+            keyPair.secretKey // Наш Secret Key
+        );
+
+        if (decrypted) {
+            plainOutTextarea.value = nacl.util.encodeUTF8(decrypted);
+            showToast('Сообщение успешно расшифровано!', 2000);
+        } else {
+            showToast('Дешифровка не удалась. Неверный ключ или сообщение.', 3000);
+            plainOutTextarea.value = 'Ошибка: Дешифровка не удалась. Возможно, неверный ключ или сообщение.';
+        }
+    } catch (e) {
+        showToast('Критическая ошибка дешифрования. Проверьте формат.', 3000);
+        plainOutTextarea.value = 'Критическая ошибка дешифрования.';
+        console.error("Decryption error:", e);
+    }
+});
+
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+  // Добавлено ожидание полной загрузки DOM
   loadKeys();
-})();
+  showPage('home'); // Установить домашнюю страницу по умолчанию
+});
+
 </script>
 </body>
 </html>
