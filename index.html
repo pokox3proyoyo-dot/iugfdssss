@@ -866,22 +866,40 @@ function exitMemeMode() {
 
 
 
+function encryptMessage() {
+    const text = plainEl.value.trim();
+    if (!text) {
+        showToast('Введите сообщение');
+        return;
+    }
+    if (!myKeyPair || !peerPubUint8) {
+        showToast('Отсутствуют ключи (сгенерируйте и импортируйте)');
+        return;
+    }
 
-  function encryptMessage(){
-    const text = plainEl.value;
-    if(!text || !text.trim()){ showToast('Введите сообщение'); return; }
-    if(text.length > MAX_LEN){ showToast('Сообщение слишком длинное'); return; }
-    if(!myKeyPair || !peerPubUint8){ showToast('Отсутствуют ключи (сгенерируйте и импортируйте)'); return; }
+    if (text.length > MAX_LEN) {
+        showToast('Сообщение слишком длинное');
+        return;
+    }
 
-    const nonce = nacl.randomBytes(NONCE_LEN);
-    const ct = nacl.box(nacl.util.encodeUTF8(text), nonce, peerPubUint8, myKeyPair.secretKey);
+    // Генерируем случайный nonce
+    const nonce = nacl.randomBytes(NONCE_LEN);
 
-    // ФОРМАТ СООБЩЕНИЯ СТАРЫЙ: nonce_b64:ct_b64
-    cipherOutEl.value = encodeB64(nonce) + ':' + encodeB64(ct);
-    plainEl.value = ''; // auto-clear
-    showToast('Сообщение зашифровано');
-    enableButtonsForKeys();
-  }
+    // Преобразуем текст в Uint8Array
+    const msgUint8 = nacl.util.decodeUTF8(text);
+
+    // Шифруем с помощью ключей
+    const box = nacl.box(msgUint8, nonce, peerPubUint8, myKeyPair.secretKey);
+
+    // Формируем строку вида nonce:cipher (Base64)
+    cipherOutEl.value = nacl.util.encodeBase64(nonce) + ':' + nacl.util.encodeBase64(box);
+
+    // Очищаем поле ввода
+    plainEl.value = '';
+
+    showToast('Сообщение зашифровано');
+    enableButtonsForKeys();
+}
 
   function decryptMessage(){
     const s = cipherInEl.value.trim();
