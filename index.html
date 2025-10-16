@@ -464,7 +464,8 @@ a:hover { color: #fff;}
     </small>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/tweetnacl.min.js"></script>
+<script src="nacl.min.js"></script>
+<script src="nacl-util.min.js"></script>
 <script>
 // ====================================
 // Инициализация
@@ -699,15 +700,13 @@ function hexToU8(hex) {
 
 // Хелпер: Вычисление отпечатка (Fingerprint - первые 16 байт SHA-256)
 async function getFingerprint(key) {
-    // Проверка на доступность крипто-API
-    if (typeof crypto === 'undefined' || !crypto.subtle) {
+    if (typeof crypto === 'undefined' || !crypto.subtle || !key) {
          return 'Crypto API not available';
     }
-    if (!key) return '';
     try {
         const hashBuffer = await crypto.subtle.digest('SHA-256', key);
         const hashArray = new Uint8Array(hashBuffer);
-        return u8ToHex(hashArray.slice(0, 16)); // 16 байт (32 hex символа)
+        return u8ToHex(hashArray.slice(0, 16));
     } catch(e) {
         console.error("Failed to generate fingerprint:", e);
         return 'Error calculating fingerprint';
@@ -762,8 +761,6 @@ function updateUI() {
     const hasKeys = !!keyPair;
     const hasPeer = !!peerPubKey;
 
-    document.getElementById('pubArea').style.display = hasKeys ? 'flex' : 'none';
-
     // Включение/отключение кнопок
     encryptBtn.disabled = !(hasKeys && hasPeer && plainTextarea.value.length > 0);
     decryptBtn.disabled = !hasKeys;
@@ -791,12 +788,7 @@ function updateUI() {
 
 // Генерация ключей
 genBtn.addEventListener('click', () => {
-    // **ВАЖНО:** nacl.box.keyPair() должен быть доступен
-    if (!window.nacl || !nacl.box) {
-         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
-         return;
-    }
-
+    // Без проверок, как вы просили. Предполагаем, что nacl доступен.
     keyPair = nacl.box.keyPair();
     const pubHex = u8ToHex(keyPair.publicKey);
     const secBase64 = arrayBufferToBase64(keyPair.secretKey.buffer);
@@ -834,7 +826,6 @@ copyPubBtn.addEventListener('click', () => {
 // Импорт ключа собеседника
 importPeerBtn.addEventListener('click', () => {
     const hex = peerPubTextarea.value.trim();
-    // Проверка длины: 32 байта = 64 hex символа
     if (hex.length === 64) {
         try {
             peerPubKey = hexToU8(hex);
@@ -855,7 +846,6 @@ importPeerBtn.addEventListener('click', () => {
 // Мониторинг поля ключа собеседника
 peerPubTextarea.addEventListener('input', () => {
     importPeerBtn.disabled = peerPubTextarea.value.trim().length === 0;
-    // Сбрасываем peerPubKey, если поле очищено или изменено
     if (peerPubTextarea.value.trim().length === 0) {
         peerPubKey = null;
         updateUI();
@@ -864,7 +854,7 @@ peerPubTextarea.addEventListener('input', () => {
 
 // Мониторинг поля открытого текста для шифрования
 plainTextarea.addEventListener('input', () => {
-    encryptBtn.disabled = !(keyPair && peerPubKey && plainTextarea.value.length > 0);
+    updateUI(); // Обновление состояния кнопки шифрования
 });
 
 // Шифрование
@@ -873,13 +863,10 @@ encryptBtn.addEventListener('click', () => {
         showToast('Сначала сгенерируйте свои ключи и импортируйте ключ собеседника.', 3000);
         return;
     }
-    if (!window.nacl || !nacl.box) {
-         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
-         return;
-    }
 
     const plaintext = plainTextarea.value;
     const nonce = nacl.randomBytes(nacl.box.nonceLength);
+    // Используем nacl.util, предполагая, что nacl-util.min.js загружен
     const messageUint8 = nacl.util.encodeUTF8(plaintext);
 
     try {
@@ -890,7 +877,6 @@ encryptBtn.addEventListener('click', () => {
             keyPair.secretKey
         );
 
-        // Собираем в строку: Nonce (24 байта) + Ciphertext
         const fullMessage = new Uint8Array(nonce.length + encrypted.length);
         fullMessage.set(nonce);
         fullMessage.set(encrypted, nonce.length);
@@ -919,10 +905,6 @@ decryptBtn.addEventListener('click', () => {
         showToast('Сначала сгенерируйте свои ключи.', 3000);
         return;
     }
-    if (!window.nacl || !nacl.box) {
-         showToast('Библиотека шифрования не загружена. Попробуйте обновить страницу.', 3000);
-         return;
-    }
 
     const cipherHex = document.getElementById('cipherin').value.trim();
     if (cipherHex.length < (nacl.box.nonceLength + nacl.box.overheadLength) * 2) {
@@ -936,32 +918,6 @@ decryptBtn.addEventListener('click', () => {
         const nonce = fullMessage.slice(0, nacl.box.nonceLength);
         const encrypted = fullMessage.slice(nacl.box.nonceLength, fullMessage.length);
 
-        // Ключ отправителя (peerPub) - это наш публичный ключ,
-        // если он шифровал для нас.
-        // **ВАЖНОЕ ИСПРАВЛЕНИЕ: Для дешифрования мы используем наш ПРИВАТНЫЙ ключ**
-        // **и ПУБЛИЧНЫЙ ключ ОТПРАВИТЕЛЯ (который мы здесь не запрашиваем).**
-        // **Но согласно логике nacl.box.open, если мы используем наш ключ,**
-        // **то вторым должен быть публичный ключ собеседника (того, кто ШИФРОВАЛ).**
-
-        // В данном дизайне (если мы дешифруем то, что нам ПРИСЛАЛИ),
-        // нам нужен: наш SecretKey и PublickKey ОТПРАВИТЕЛЯ.
-        // НО, ТАК КАК ВАШ КОД ИСПОЛЬЗУЕТ: наш SecretKey и НАШ PublicKey (peerPub = keyPair.publicKey),
-        // это означает, что шифрование/дешифрование работает только "сам для себя" или
-        // собеседник должен использовать НАШ public key, а мы используем НАШ public key
-        // при дешифровании, что логически неверно для обмена.
-
-        // **ВОССТАНОВЛЕНИЕ ИСХОДНОЙ ЛОГИКИ (если она была такой):**
-        // Если шифрование происходит "от нас к собеседнику" (Enc): (наш Sec + его Pub)
-        // Дешифрование должно быть "от собеседника к нам" (Dec): (их Sec + наш Pub)
-        // Так как мы не имеем их Sec, nacl box.open требует: (наш Sec + их Pub)
-
-        // **ВОССТАНОВЛЕННАЯ ЛОГИКА:** Мы предполагаем, что пользователь в поле
-        // "Вставьте публичный ключ собеседника" (peerPubTextarea)
-        // вставляет ключ **того, кто шифровал для него** (отправителя).
-        // Если это так, то для дешифрования нужна пара:
-        // (наш SecretKey) и (PublicKey ОТПРАВИТЕЛЯ) - который уже в `peerPubKey`.
-
-        // **Если peerPubKey пуст, мы не можем дешифровать.**
         if (!peerPubKey) {
             showToast('Для дешифрования укажите публичный ключ отправителя в поле 2.', 4000);
             plainOutTextarea.value = 'Ошибка: Публичный ключ отправителя не импортирован.';
@@ -971,12 +927,13 @@ decryptBtn.addEventListener('click', () => {
         const decrypted = nacl.box.open(
             encrypted,
             nonce,
-            peerPubKey, // Public Key ОТПРАВИТЕЛЯ
-            keyPair.secretKey // Наш Secret Key
+            peerPubKey,
+            keyPair.secretKey
         );
 
         if (decrypted) {
-            plainOutTextarea.value = nacl.util.encodeUTF8(decrypted);
+            // Используем nacl.util, предполагая, что nacl-util.min.js загружен
+            plainOutTextarea.value = nacl.util.decodeUTF8(decrypted);
             showToast('Сообщение успешно расшифровано!', 2000);
         } else {
             showToast('Дешифровка не удалась. Неверный ключ или сообщение.', 3000);
@@ -990,9 +947,8 @@ decryptBtn.addEventListener('click', () => {
 });
 
 
-// Инициализация
+// Инициализация - Ключевой момент для кнопок: загрузка ключей после полной загрузки страницы
 document.addEventListener('DOMContentLoaded', () => {
-  // Добавлено ожидание полной загрузки DOM
   loadKeys();
   showPage('home'); // Установить домашнюю страницу по умолчанию
 });
