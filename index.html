@@ -468,7 +468,7 @@ a:hover { color: #fff;}
 <script src="nacl-util.min.js"></script>
 <script>
 // ====================================
-// Инициализация
+// Инициализация (Навигация и Мемы)
 // ====================================
 
 const state = {
@@ -524,26 +524,8 @@ navButtons.forEach(button => {
   });
 });
 
-function showToast(message, duration = 3000) {
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0)';
-    }, 10);
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, duration);
-}
-
+// ПЕРЕОПРЕДЕЛЕНА В СТАРОЙ ЛОГИКЕ ДЛЯ ТОСТОВ:
+// function showToast(message, duration = 3000) { ... }
 
 // ====================================
 // САНС / ИНТЕРАКТИВ (ОДИН КЛИК)
@@ -581,6 +563,7 @@ function activateSansMeme(event) {
     if (state.activePage !== 'home') return;
 
     if (state.isSansActive) {
+        // Используем старую функцию showToast
         showToast('...ты уже сделал свой выбор.', 1000);
         return;
     }
@@ -660,298 +643,314 @@ function exitMemeMode() {
 }
 
 
-// ====================================
-// КРИПТОГРАФИЯ (TWEETNACL) - ПОЧИНЕННАЯ ЛОГИКА
-// ====================================
+// =================================================================
+// СЕКЦИЯ КРИПТОГРАФИИ: ПОЛНОСТЬЮ ИЗ СТАРОЙ ВЕРСИИ
+// =================================================================
 
-const myPubTextarea = document.getElementById('myPub');
-const peerPubTextarea = document.getElementById('peerPub');
-const cipherOutTextarea = document.getElementById('cipherout');
-const plainOutTextarea = document.getElementById('plainout');
-const plainTextarea = document.getElementById('plain');
+(function(){
+  // util aliases
+  const util = nacl.util;
+  const encodeB64 = util.encodeBase64;
+  const decodeB64 = util.decodeBase64;
+  const encodeUTF8 = util.encodeUTF8;
+  const decodeUTF8 = util.decodeUTF8;
 
-const copyPubBtn = document.getElementById('copyPub');
-const importPeerBtn = document.getElementById('importPeer');
-const encryptBtn = document.getElementById('encryptBtn');
-const decryptBtn = document.getElementById('decryptBtn');
-const genBtn = document.getElementById('gen');
-const resetBtn = document.getElementById('resetBtn');
+  // DOM
+  // Привязка к элементам по их ID, которые должны присутствовать на странице Чат
+  const genBtn = document.getElementById('gen'); // ID сгенерировать ключи (из текущего HTML)
+  const pubArea = document.getElementById('pubArea'); // ID контейнера для публичного ключа (из текущего HTML)
+  const myPubEl = document.getElementById('myPub'); // ID публичного ключа (из текущего HTML)
+  const myFpEl = document.getElementById('myFp'); // ID отпечатка (из текущего HTML)
+  const copyPubBtn = document.getElementById('copyPub'); // ID копировать публичный ключ (из текущего HTML)
+  const resetBtn = document.getElementById('resetBtn'); // ID сброса (из текущего HTML)
 
-const myFpCode = document.getElementById('myFp');
-const peerFpCode = document.getElementById('peerFp');
+  // Новые кнопки/поля, которые могут отсутствовать в вашем текущем HTML,
+  // но нужны для старой логики. Если их нет, код может сломаться.
+  // Я использую ID из вашего текущего кода, где это возможно.
+   // НЕТ В ТЕКУЩЕМ HTML, НУЖНО ДОБАВИТЬ:
+   const exportPrivBtn = document.createElement('button'); // заглушка, т.к. нет ID
+   const importPrivBtn = document.createElement('button'); // заглушка
+   const clearStoredBtn = resetBtn; // Используем существующую кнопку сброса
+   const saveMyPairBtn = document.createElement('button'); // заглушка
 
-let keyPair = null;
-let peerPubKey = null;
+  const peerPubEl = document.getElementById('peerPub'); // ID ключа собеседника
+  const importPeerBtn = document.getElementById('importPeer'); // ID импортировать ключ собеседника
+   // НЕТ В ТЕКУЩЕМ HTML, НУЖНО ДОБАВИТЬ:
+  const savePeerBtn = document.createElement('button'); // заглушка
+  const loadPeerBtn = document.createElement('button'); // заглушка
+  const peerFpEl = document.getElementById('peerFp'); // ID отпечатка собеседника
 
-// Хелпер: Uint8Array -> Hex String
-function u8ToHex(arr) {
-    return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+  const plainEl = document.getElementById('plain'); // ID сообщения для шифрования
+  const encryptBtn = document.getElementById('encryptBtn'); // ID зашифровать
+   // НЕТ В ТЕКУЩЕМ HTML, НУЖНО ДОБАВИТЬ:
+  const doubleEncryptBtn = document.createElement('button'); // заглушка
+  const cipherOutEl = document.getElementById('cipherout'); // ID зашифрованной строки (output)
+  const copyCipherBtn = document.getElementById('copyCipher'); // ID копировать шифртекст
 
-// Хелпер: Hex String -> Uint8Array
-function hexToU8(hex) {
-    if (hex.length % 2 !== 0) throw new Error("Invalid hex string length");
-    const arr = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-        arr[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-    }
-    return arr;
-}
+  const cipherInEl = document.getElementById('cipherin'); // ID вставьте шифртекст (input)
+  const decryptBtn = document.getElementById('decryptBtn'); // ID дешифровать
+  const plainOutEl = document.getElementById('plainout'); // ID расшифрованный текст (output)
 
-// Хелпер: Вычисление отпечатка (Fingerprint - первые 16 байт SHA-256)
-async function getFingerprint(key) {
-    if (typeof crypto === 'undefined' || !crypto.subtle || !key) {
-         return 'Crypto API not available';
-    }
-    try {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', key);
-        const hashArray = new Uint8Array(hashBuffer);
-        return u8ToHex(hashArray.slice(0, 16));
-    } catch(e) {
-        console.error("Failed to generate fingerprint:", e);
-        return 'Error calculating fingerprint';
-    }
-}
+  // ТОСТЫ (СКОПИРОВАНО ИЗ СТАРОЙ ВЕРСИИ)
+  const toastContainer = document.getElementById('toast-container');
+  function showToast(msg, ms=2600){
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    toastContainer.appendChild(t);
+    // animate in
+    requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(-10px)'; t.addEventListener('transitionend', ()=> t.remove()); }, ms);
+  }
 
-// Хелпер: ArrayBuffer -> String (для хранения в LocalStorage)
-function arrayBufferToBase64(buffer) {
-    return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-}
 
-// Хелпер: String -> ArrayBuffer
-function base64ToArrayBuffer(base64) {
-    const binary_string = atob(base64);
-    const len = binary_string.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
+  // state
+  let myKeyPair = null; // { publicKey: Uint8Array, secretKey: Uint8Array }
+  let peerPubUint8 = null;
 
-// Загрузка ключей из localStorage
-function loadKeys() {
-    const storedPub = localStorage.getItem('myPubKey');
-    const storedSec = localStorage.getItem('mySecKey');
+  const MAX_LEN = 5000;
+  const PUB_LEN = 32;
+  const NONCE_LEN = 24;
 
-    if (storedPub && storedSec) {
+  // helpers
+  function sanitize(str){
+    if(!str) return '';
+    return String(str).replace(/[<>]/g, (c)=> c==='<'?'&lt;':'&gt;');
+  }
+
+  async function sha256hex(u8){
+    const hash = await crypto.subtle.digest('SHA-256', u8);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function enableButtonsForKeys(){
+    // Адаптировано под ваши текущие ID кнопок
+    const hasKeyPair = !!myKeyPair;
+    const hasPeerKey = !!peerPubUint8;
+    const plainNotEmpty = plainEl.value.trim().length > 0;
+    const cipherOutNotEmpty = cipherOutEl.value.trim().length > 0;
+
+    // importPeerBtn (Импортировать) активируется при наличии текста в поле ввода
+    importPeerBtn.disabled = peerPubEl.value.trim().length === 0;
+
+    // encryptBtn (Зашифровать) активируется при наличии обоих ключей И текста
+    encryptBtn.disabled = !(hasKeyPair && hasPeerKey && plainNotEmpty);
+
+    // decryptBtn (Дешифровать) активируется при наличии нашего ключа и ключа собеседника
+    // (в старой логике для дешифровки нужен ключ отправителя, который находится в peerPubUint8)
+    decryptBtn.disabled = !(hasKeyPair && hasPeerKey);
+
+    // copyCipherBtn (Копировать шифртекст)
+    copyCipherBtn.disabled = !cipherOutNotEmpty;
+
+    // Заглушки, т.к. этих кнопок нет в вашем HTML
+    // doubleEncryptBtn.disabled = encryptBtn.disabled;
+    // saveMyPairBtn.disabled = !myKeyPair;
+    // savePeerBtn.disabled = !peerPubUint8;
+  }
+
+  // storage helpers (используют старую логику)
+  function saveMyPairToStorage(){
+    if(!myKeyPair) return;
+    try{
+      localStorage.setItem('sc_my_pair', JSON.stringify({
+        pub: encodeB64(myKeyPair.publicKey),
+        sec: encodeB64(myKeyPair.secretKey)
+      }));
+      showToast('Пара ключей сохранена в localStorage');
+      enableButtonsForKeys();
+    }catch(e){ showToast('Ошибка сохранения: ' + e.message); }
+  }
+
+  function loadMyPairFromStorage(){
+    const raw = localStorage.getItem('sc_my_pair');
+    if(!raw) return false;
+    try{
+      const parsed = JSON.parse(raw);
+      myKeyPair = {
+        publicKey: decodeB64(parsed.pub),
+        secretKey: decodeB64(parsed.sec)
+      };
+      myPubEl.value = parsed.pub;
+      pubArea.style.display = 'flex';
+      sha256hex(myKeyPair.publicKey).then(fp=> myFpEl.textContent = fp.slice(0,32));
+      showToast('Пара ключей загружена из localStorage');
+      return true;
+    }catch(e){ console.error(e); return false; }
+  }
+  // (Остальные storage helpers я удалил, чтобы не усложнять код, т.к. у вас нет кнопок 'savePeer'/'loadPeer')
+
+  function clearAllStorage(){
+    localStorage.removeItem('sc_my_pair');
+    localStorage.removeItem('sc_peer_pub');
+    myKeyPair = null;
+    peerPubUint8 = null;
+    myPubEl.value = '';
+    myFpEl.textContent = 'Нет ключа'; // Изменено
+    peerPubEl.value = '';
+    peerFpEl.textContent = 'Нет ключа'; // Изменено
+    cipherOutEl.value = '';
+    cipherInEl.value = '';
+    plainEl.value = '';
+    plainOutEl.value = '';
+    pubArea.style.display = 'none';
+    showToast('Все сохранённые ключи и поля очищены');
+    enableButtonsForKeys();
+  }
+
+  // core crypto (ИЗ СТАРОЙ ВЕРСИИ)
+  function generateKeyPair(){
+    const kp = nacl.box.keyPair();
+    myKeyPair = { publicKey: kp.publicKey, secretKey: kp.secretKey };
+    const pubB64 = encodeB64(kp.publicKey);
+    myPubEl.value = pubB64;
+    pubArea.style.display = 'flex';
+    sha256hex(kp.publicKey).then(fp => myFpEl.textContent = fp.slice(0,32));
+    showToast('Пара ключей сгенерирована');
+    enableButtonsForKeys();
+
+    // ДОБАВЛЕНИЕ АВТОМАТИЧЕСКОГО КОПИРОВАНИЯ (ПО ЖЕЛАНИЮ ПОЛЬЗОВАТЕЛЯ)
+    copyToClipboard(pubB64);
+  }
+
+  function importPeerFromField(){
+    const s = peerPubEl.value.trim();
+    if(!s){ showToast('Вставьте публичный ключ в поле'); return; }
+    try{
+      const u8 = decodeB64(s);
+      if(u8.length !== PUB_LEN) throw new Error('неверная длина публичного ключа');
+      peerPubUint8 = u8;
+      sha256hex(peerPubUint8).then(fp => peerFpEl.textContent = fp.slice(0,32));
+      peerPubEl.value = ''; // Очищаем поле после импорта
+      showToast('Ключ собеседника импортирован');
+      enableButtonsForKeys();
+    }catch(e){
+      showToast('Ошибка импорта ключа: ' + (e.message||''));
+    }
+  }
+
+  function encryptMessage(){
+    const text = plainEl.value;
+    if(!text || !text.trim()){ showToast('Введите сообщение'); return; }
+    if(text.length > MAX_LEN){ showToast('Сообщение слишком длинное'); return; }
+    if(!myKeyPair || !peerPubUint8){ showToast('Отсутствуют ключи (сгенерируйте и импортируйте)'); return; }
+    const nonce = nacl.randomBytes(NONCE_LEN);
+    const ct = nacl.box(nacl.util.encodeUTF8(text), nonce, peerPubUint8, myKeyPair.secretKey);
+    // ФОРМАТ СООБЩЕНИЯ СТАРЫЙ: nonce_b64:ct_b64
+    cipherOutEl.value = encodeB64(nonce) + ':' + encodeB64(ct);
+    plainEl.value = ''; // auto-clear
+    showToast('Сообщение зашифровано');
+    enableButtonsForKeys(); // Обновление состояния кнопки копирования
+  }
+
+  // doubleEncryptMessage я удалил, т.к. у вас нет соответствующей кнопки
+
+  function decryptMessage(){
+    const s = cipherInEl.value.trim();
+    if(!s){ showToast('Вставьте зашифрованную строку'); return; }
+    if(!myKeyPair || !peerPubUint8){ showToast('Отсутствуют ключи (сгенерируйте и импортируйте)'); return; }
+    try{
+      const parts = s.split(':');
+      if(parts.length !== 2) throw new Error('Неверный формат (ожидается nonce:ct)');
+      const nonce = decodeB64(parts[0]);
+      const ct = decodeB64(parts[1]);
+      const msgU8 = nacl.box.open(ct, nonce, peerPubUint8, myKeyPair.secretKey);
+      if(!msgU8) throw new Error('Дешифровка не удалась (неправильный ключ или данные)');
+      const text = nacl.util.decodeUTF8(msgU8); // Исправлено: nacl.util.encodeUTF8 -> decodeUTF8
+      plainOutEl.value = text;
+      cipherInEl.value = ''; // auto-clear
+      showToast('Сообщение расшифровано');
+    }catch(e){
+      showToast('Ошибка дешифровки: ' + (e.message||''));
+    }
+  }
+
+  // clipboard helpers (ИЗ СТАРОЙ ВЕРСИИ, ИСПОЛЬЗУЕТ СОВРЕМЕННЫЙ API)
+  function copyToClipboard(txt){
+    if(!txt) { showToast('Нет текста для копирования'); return; }
+    // Проверка на доступность navigator.clipboard (более надежно)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(()=> showToast('Скопировано в буфер обмена')).catch(()=>{
+            // Если современный API не сработал (редко), используем старый execCommand
+            try {
+                const tempEl = document.createElement('textarea');
+                tempEl.value = txt;
+                document.body.appendChild(tempEl);
+                tempEl.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempEl);
+                showToast('Скопировано в буфер обмена');
+            } catch(e) {
+                showToast('Ошибка копирования');
+            }
+        });
+    } else {
+        // Fallback для очень старых браузеров
         try {
-            keyPair = {
-                publicKey: new Uint8Array(base64ToArrayBuffer(storedPub)),
-                secretKey: new Uint8Array(base64ToArrayBuffer(storedSec))
-            };
-            myPubTextarea.value = u8ToHex(keyPair.publicKey);
-            updateUI();
-            getFingerprint(keyPair.publicKey).then(fp => myFpCode.textContent = fp);
-            showToast('Ключи загружены из локального хранилища!', 2000);
-        } catch (e) {
-            console.error("Error loading keys from storage:", e);
-            showToast('Ошибка при загрузке ключей. Сгенерируйте новые.', 3000);
-            localStorage.removeItem('myPubKey');
-            localStorage.removeItem('mySecKey');
-            updateUI();
+            const tempEl = document.createElement('textarea');
+            tempEl.value = txt;
+            document.body.appendChild(tempEl);
+            tempEl.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempEl);
+            showToast('Скопировано в буфер обмена');
+        } catch(e) {
+            showToast('Ошибка копирования');
         }
-    } else {
-        updateUI();
     }
-}
+  }
 
-// Обновление состояния интерфейса
-function updateUI() {
-    const hasKeys = !!keyPair;
-    const hasPeer = !!peerPubKey;
-
-    // Включение/отключение кнопок
-    encryptBtn.disabled = !(hasKeys && hasPeer && plainTextarea.value.length > 0);
-    decryptBtn.disabled = !hasKeys;
-    importPeerBtn.disabled = peerPubTextarea.value.length === 0;
-
-    // Обновление отпечатков
-    if (hasKeys) {
-        myPubTextarea.value = u8ToHex(keyPair.publicKey);
-        getFingerprint(keyPair.publicKey).then(fp => myFpCode.textContent = fp);
-    } else {
-        myPubTextarea.value = '';
-        myFpCode.textContent = 'Нет ключа';
-    }
-
-    if (hasPeer) {
-        getFingerprint(peerPubKey).then(fp => peerFpCode.textContent = fp);
-    } else {
-        peerFpCode.textContent = 'Нет ключа';
-    }
-}
-
-// ====================================
-// ОБРАБОТЧИКИ СОБЫТИЙ
-// ====================================
-
-// Генерация ключей
-genBtn.addEventListener('click', () => {
-    // Без проверок, как вы просили. Предполагаем, что nacl доступен.
-    keyPair = nacl.box.keyPair();
-    const pubHex = u8ToHex(keyPair.publicKey);
-    const secBase64 = arrayBufferToBase64(keyPair.secretKey.buffer);
-
-    localStorage.setItem('myPubKey', arrayBufferToBase64(keyPair.publicKey.buffer));
-    localStorage.setItem('mySecKey', secBase64);
-
-    myPubTextarea.value = pubHex;
-    showToast('Новая пара ключей сгенерирована и сохранена!', 3000);
-    updateUI();
-});
-
-// Сброс
-resetBtn.addEventListener('click', () => {
-    localStorage.clear();
-    keyPair = null;
-    peerPubKey = null;
-    peerPubTextarea.value = '';
-    cipherOutTextarea.value = '';
-    plainOutTextarea.value = '';
-    plainTextarea.value = '';
-    showToast('Все ключи и данные сброшены.', 3000);
-    updateUI();
-});
-
-// Копирование публичного ключа
-copyPubBtn.addEventListener('click', () => {
-    if (keyPair) {
-        myPubTextarea.select();
-        document.execCommand('copy');
-        showToast('Публичный ключ скопирован!', 1500);
-    }
-});
-
-// Импорт ключа собеседника
-importPeerBtn.addEventListener('click', () => {
-    const hex = peerPubTextarea.value.trim();
-    if (hex.length === 64) {
-        try {
-            peerPubKey = hexToU8(hex);
-            showToast('Публичный ключ собеседника импортирован.', 2000);
-            updateUI();
-        } catch (e) {
-            showToast('Неверный формат ключа (требуется 64 Hex символа).', 3000);
-            peerPubKey = null;
-            updateUI();
-        }
-    } else {
-        showToast('Неверный формат ключа (требуется 64 Hex символа).', 3000);
-        peerPubKey = null;
-        updateUI();
-    }
-});
-
-// Мониторинг поля ключа собеседника
-peerPubTextarea.addEventListener('input', () => {
-    importPeerBtn.disabled = peerPubTextarea.value.trim().length === 0;
-    if (peerPubTextarea.value.trim().length === 0) {
-        peerPubKey = null;
-        updateUI();
-    }
-});
-
-// Мониторинг поля открытого текста для шифрования
-plainTextarea.addEventListener('input', () => {
-    updateUI(); // Обновление состояния кнопки шифрования
-});
-
-// Шифрование
-encryptBtn.addEventListener('click', () => {
-    if (!keyPair || !peerPubKey) {
-        showToast('Сначала сгенерируйте свои ключи и импортируйте ключ собеседника.', 3000);
-        return;
-    }
-
-    const plaintext = plainTextarea.value;
-    const nonce = nacl.randomBytes(nacl.box.nonceLength);
-    // Используем nacl.util, предполагая, что nacl-util.min.js загружен
-    const messageUint8 = nacl.util.encodeUTF8(plaintext);
-
-    try {
-        const encrypted = nacl.box(
-            messageUint8,
-            nonce,
-            peerPubKey,
-            keyPair.secretKey
-        );
-
-        const fullMessage = new Uint8Array(nonce.length + encrypted.length);
-        fullMessage.set(nonce);
-        fullMessage.set(encrypted, nonce.length);
-
-        cipherOutTextarea.value = u8ToHex(fullMessage);
-        showToast('Сообщение зашифровано!', 2000);
-    } catch (e) {
-        showToast('Ошибка шифрования. Проверьте ключи.', 3000);
-        console.error("Encryption error:", e);
-    }
-});
-
-// Копирование зашифрованного
-document.getElementById('copyCipher').addEventListener('click', () => {
-    if (cipherOutTextarea.value) {
-        cipherOutTextarea.select();
-        document.execCommand('copy');
-        showToast('Зашифрованный текст скопирован!', 1500);
-    }
-});
+  // export/import private key (пока удалены, т.к. нет кнопок)
+  // ВАЖНО: resetBtn (ID 'clearStoredBtn' в старой логике)
+  if (clearStoredBtn) {
+        clearStoredBtn.addEventListener('click', ()=> {
+            if(confirm('Удалить все сохранённые ключи и поля?')) clearAllStorage();
+        });
+  }
 
 
-// Дешифрование
-decryptBtn.addEventListener('click', () => {
-    if (!keyPair) {
-        showToast('Сначала сгенерируйте свои ключи.', 3000);
-        return;
-    }
+  // init listeners
+  genBtn.addEventListener('click', ()=> {
+    generateKeyPair();
+    // Автоматическое копирование включено внутри generateKeyPair
+  });
+  // saveMyPairBtn.addEventListener('click', ()=> saveMyPairToStorage()); // Нет кнопки
+  copyPubBtn.addEventListener('click', ()=> copyToClipboard(myPubEl.value));
+  // exportPrivBtn.addEventListener('click', ()=> exportPrivate()); // Нет кнопки
+  // importPrivBtn.addEventListener('click', ()=> importPrivate()); // Нет кнопки
 
-    const cipherHex = document.getElementById('cipherin').value.trim();
-    if (cipherHex.length < (nacl.box.nonceLength + nacl.box.overheadLength) * 2) {
-        showToast('Неверная длина зашифрованного сообщения. Недостаточно данных.', 3000);
-        plainOutTextarea.value = 'Ошибка: неверная длина сообщения.';
-        return;
-    }
+  importPeerBtn.addEventListener('click', ()=> importPeerFromField());
+  // savePeerBtn.addEventListener('click', ()=> savePeerToStorage()); // Нет кнопки
+  // loadPeerBtn.addEventListener('click', ()=> loadPeerFromStorage()); // Нет кнопки
 
-    try {
-        const fullMessage = hexToU8(cipherHex);
-        const nonce = fullMessage.slice(0, nacl.box.nonceLength);
-        const encrypted = fullMessage.slice(nacl.box.nonceLength, fullMessage.length);
+  encryptBtn.addEventListener('click', ()=> encryptMessage());
+  // doubleEncryptBtn.addEventListener('click', ()=> doubleEncryptMessage()); // Нет кнопки
+  copyCipherBtn.addEventListener('click', ()=> copyToClipboard(cipherOutEl.value));
+  decryptBtn.addEventListener('click', ()=> decryptMessage());
 
-        if (!peerPubKey) {
-            showToast('Для дешифрования укажите публичный ключ отправителя в поле 2.', 4000);
-            plainOutTextarea.value = 'Ошибка: Публичный ключ отправителя не импортирован.';
-            return;
-        }
+  // keyboard shortcuts (Enter)
+  peerPubEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); importPeerFromField(); }});
+  plainEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); encryptMessage(); }});
+  cipherInEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); decryptMessage(); }});
 
-        const decrypted = nacl.box.open(
-            encrypted,
-            nonce,
-            peerPubKey,
-            keyPair.secretKey
-        );
+  // try load saved pair and peer on startup
+  loadMyPairFromStorage();
+  // loadPeerFromStorage(); // Отключено, т.к. нет соответствующей кнопки
 
-        if (decrypted) {
-            // Используем nacl.util, предполагая, что nacl-util.min.js загружен
-            plainOutTextarea.value = nacl.util.decodeUTF8(decrypted);
-            showToast('Сообщение успешно расшифровано!', 2000);
-        } else {
-            showToast('Дешифровка не удалась. Неверный ключ или сообщение.', 3000);
-            plainOutTextarea.value = 'Ошибка: Дешифровка не удалась. Возможно, неверный ключ или сообщение.';
-        }
-    } catch (e) {
-        showToast('Критическая ошибка дешифрования. Проверьте формат.', 3000);
-        plainOutTextarea.value = 'Критическая ошибка дешифрования.';
-        console.error("Decryption error:", e);
-    }
-});
+  // Инициализация на старте
+  document.addEventListener('DOMContentLoaded', () => {
+    // Обновление состояния кнопок после загрузки DOM и ключей
+    enableButtonsForKeys();
+    showPage('home');
+  });
+
+  // small UX: disable copy buttons when empty
+  // Тут мы используем observer для кнопки copyCipherBtn, которая обновляет состояние при изменении текста
+  const observer = new MutationObserver(()=> { copyCipherBtn.disabled = !cipherOutEl.value.trim(); });
+  observer.observe(cipherOutEl, { childList:true, subtree:true, characterData:true });
 
 
-// Инициализация - Ключевой момент для кнопок: загрузка ключей после полной загрузки страницы
-document.addEventListener('DOMContentLoaded', () => {
-  loadKeys();
-  showPage('home'); // Установить домашнюю страницу по умолчанию
-});
+})(); // eof
 
 </script>
 </body>
