@@ -918,8 +918,21 @@ function exitMemeMode() {
   decryptBtn.addEventListener('click', ()=> decryptMessage());
 
   // Добавление слушателей для полей ввода для обновления состояния кнопок
-  peerPubEl.addEventListener('input', enableButtonsForKeys);
-  plainEl.addEventListener('input', enableButtonsForKeys);
+  // Следим за изменениями текста в поле собеседника и plaintext
+function updateButtons() {
+  enableButtonsForKeys();
+}
+
+peerPubEl.addEventListener('input', updateButtons);
+plainEl.addEventListener('input', updateButtons);
+
+// Также ловим вставку текста (paste), чтобы активировалась кнопка "Импортировать"
+peerPubEl.addEventListener('paste', () => {
+  setTimeout(enableButtonsForKeys, 50);
+});
+
+// И при клике проверяем состояние — чтобы если поле уже заполнено, кнопка была активна
+peerPubEl.addEventListener('focus', enableButtonsForKeys);
 
   // keyboard shortcuts (Enter)
   peerPubEl.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); importPeerFromField(); }});
