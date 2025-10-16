@@ -901,27 +901,32 @@ function encryptMessage() {
     enableButtonsForKeys();
 }
 
-  function decryptMessage(){
-    const s = cipherInEl.value.trim();
-    if(!s){ showToast('Вставьте зашифрованную строку'); return; }
-    if(!myKeyPair || !peerPubUint8){ showToast('Отсутствуют ключи (сгенерируйте и импортируйте)'); return; }
-    try{
-      const parts = s.split(':');
-      if(parts.length !== 2) throw new Error('Неверный формат (ожидается nonce:ct)');
-      const nonce = decodeB64(parts[0]);
-      const ct = decodeB64(parts[1]);
 
-      const msgU8 = nacl.box.open(ct, nonce, peerPubUint8, myKeyPair.secretKey);
-      if(!msgU8) throw new Error('Дешифровка не удалась (неправильный ключ или данные)');
+function decryptMessage(){
+  const s = cipherInEl.value.trim();
+  if(!s){ showToast('Вставьте зашифрованную строку'); return; }
+  if(!myKeyPair || !peerPubUint8){ showToast('Отсутствуют ключи'); return; }
+  try{
+    // удаляем все пробелы и переносы внутри строки
+    const cleanStr = s.replace(/\s+/g,'');
+    const parts = cleanStr.split(':');
+    if(parts.length !== 2) throw new Error('Неверный формат (ожидается nonce:ct)');
 
-      const text = nacl.util.decodeUTF8(msgU8);
-      plainOutEl.value = text;
-      cipherInEl.value = ''; // auto-clear
-      showToast('Сообщение расшифровано');
-    }catch(e){
-      showToast('Ошибка дешифровки: ' + (e.message||''));
-    }
-  }
+    const nonce = decodeB64(parts[0]);
+    const ct = decodeB64(parts[1]);
+
+    const msgU8 = nacl.box.open(ct, nonce, peerPubUint8, myKeyPair.secretKey);
+    if(!msgU8) throw new Error('Дешифровка не удалась (неправильный ключ или данные)');
+
+    const text = encodeUTF8(msgU8);
+    plainOutEl.value = text;
+    cipherInEl.value = '';
+    showToast('Сообщение расшифровано');
+  }catch(e){
+    showToast('Ошибка дешифровки: ' + (e.message||''));
+  }
+}
+
 
   // init listeners
   genBtn.addEventListener('click', ()=> {
