@@ -847,21 +847,25 @@ function exitMemeMode() {
     enableButtonsForKeys();
   }
 
+
   function importPeerFromField(){
-    const s = peerPubEl.value.trim();
-    if(!s){ showToast('Вставьте публичный ключ в поле'); return; }
-    try{
-      const u8 = decodeB64(s);
-      if(u8.length !== PUB_LEN) throw new Error('неверная длина публичного ключа');
-      peerPubUint8 = u8;
-      sha256hex(peerPubUint8).then(fp => peerFpEl.textContent = fp.slice(0,32));
-      peerPubEl.value = ''; // Очищаем поле после импорта
-      showToast('Ключ собеседника импортирован');
-      enableButtonsForKeys();
-    }catch(e){
-      showToast('Ошибка импорта ключа: ' + (e.message||''));
-    }
-  }
+  const s = peerPubEl.value.trim();
+  if(!s){ showToast('Вставьте публичный ключ в поле'); return; }
+  try{
+    const u8 = decodeB64(s);
+    if(u8.length !== PUB_LEN) throw new Error('неверная длина публичного ключа');
+    peerPubUint8 = u8;
+    sha256hex(peerPubUint8).then(fp => peerFpEl.textContent = fp.slice(0,32));
+    // peerPubEl.value = ''; // ❌ убираем очистку
+    showToast('Ключ собеседника импортирован');
+    enableButtonsForKeys();
+  }catch(e){
+    showToast('Ошибка импорта ключа: ' + (e.message||''));
+  }
+}
+
+
+
 
   function encryptMessage(){
     const text = plainEl.value;
