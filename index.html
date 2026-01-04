@@ -20,165 +20,19 @@
 <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23ff5aab' rx='100'/><text x='256' y='330' text-anchor='middle' font-size='256' fill='white'>💬</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
 <canvas id="particle-canvas"></canvas>
-<button id="menu-btn">☰ Меню</button>
-<nav id="nav-menu">
-  <button onclick="showPage('home')" class="active" data-page="home">🏠 Главная</button>
-  <button onclick="showPage('chat')" data-page="chat">💬 Чат</button>
-  <button onclick="showPage('setup')" data-page="setup">🔑 Настройка</button>
-</nav>
+
+<button id="menu-btn">≡ Menu</button>
+
 <!-- Room Status Indicator -->
-<div class="room-status-indicator" id="room-status">
-  <div class="room-status-ball" id="status-ball"></div>
-  <span class="room-name" id="status-room-name">...</span>
-  <span class="participants-count" id="status-participants"></span>
-</div>
-
-<div class="container">
-  <!-- HOME PAGE -->
-  <div id="home-page" class="page active">
-    <h1 class="scroll-reveal">🔐 Secure Hax Messenger</h1>
-    
-    <div class="card scroll-reveal">
-      <h2>💬 Безопасный чат в реальном времени</h2>
-      <p>Отправляйте зашифрованные сообщения, которые невозможно перехватить. Даже сервер не знает содержания ваших переписок.</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>🔑 End-to-End шифрование</h3>
-      <p>Все сообщения шифруются локально в браузере с помощью <strong>TweetNaCl</strong> — библиотеки криптографии, которую использует Signal.</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>🎮 Встроенные функции</h3>
-      <p>Играйте в "Камень-Ножницы-Бумага" с друзьями прямо в чате, используя систему ставок и счёта!</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>🎤 Голосовые сообщения и звонки</h3>
-      <p>Записывайте и отправляйте голосовые сообщения одним кликом. Совершайте аудиозвонки через WebRTC!</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>📱 Мобильная оптимизация</h3>
-      <p>Полная поддержка мобильных устройств с адаптивным интерфейсом, жестами и PWA-поддержкой для установки на главный экран.</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>🌍 Без регистрации</h3>
-      <p>Никаких номеров телефонов, email или паролей. Просто создайте комнату и поделитесь кодом!</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h2>⚡ Как начать?</h2>
-      <ol style="padding-left: 20px; margin-top: 15px;">
-        <li style="margin-bottom: 10px;">Перейдите во вкладку <strong>💬 Чат</strong></li>
-        <li style="margin-bottom: 10px;">Создайте комнату и получите уникальный код (например: <code>HAX-A1B2C3</code>)</li>
-        <li style="margin-bottom: 10px;">Поделитесь кодом с другом</li>
-        <li style="margin-bottom: 10px;">Дождитесь подключения (🟢 <strong>Подключено!</strong>)</li>
-        <li>Общайтесь безопасно!</li>
-      </ol>
-    </div>
-
-    <div class="card scroll-reveal" style="text-align: center;">
-      <h2>🔐 Важно знать</h2>
-      <p style="text-align: left;">📌 <strong>Не сохраняем сообщения:</strong> После закрытия комнаты все сообщения удаляются навсегда.</p>
-      <p style="text-align: left; margin-top: 10px;">📌 <strong>Один код = одна пара:</strong> Код комнаты предназначен для общения только <strong>одной пары</strong> собеседников.</p>
-      <p style="text-align: left; margin-top: 10px;">📌 <strong>Конфиденциальность:</strong> Не публикуйте код комнаты в открытых источниках.</p>
-    </div>
-
-    <div class="card scroll-reveal">
-      <h3>🔧 Технологии</h3>
-      <p><strong>TweetNaCl</strong> — криптография уровня Signal. <strong>Firebase</strong> — синхронизация в реальном времени. <strong>WebRTC</strong> — голосовые звонки P2P.</p>
-    </div>
-
-    <div class="card scroll-reveal" style="text-align: center; background: linear-gradient(135deg, rgba(255,90,171,0.2), rgba(138,43,226,0.2));">
-      <h2>🎉 Пасхалки</h2>
-      <p>👆 Кликните на <strong>"Sans"</strong> внизу страницы <strong>3 раза</strong> для секретного режима!</p>
-      <p style="margin-top: 10px;">💬 Введите <strong>"socks"</strong> в чате для активации секретного режима!</p>
-    </div>
-  </div>
-
-  <!-- CHAT PAGE -->
-  <div id="chat-page" class="page">
-    <h1>💬 Чат</h1>
-
-    <div id="room-setup" class="card">
-      <h2>📱 Комната</h2>
-      <p>Создайте новую комнату или подключитесь к существующей по коду.</p>
-      <div id="room-code-display" style="display: none;" onclick="copyRoomCode()">
-        Нажмите, чтобы скопировать
-      </div>
-      <div class="row" style="justify-content: center; margin-top: 15px;">
-        <button id="create-room-btn">✨ Создать комнату</button>
-      </div>
-      <div class="row" style="justify-content: center; margin-top: 10px;">
-        <input type="text" id="join-room-input" placeholder="Введите код комнаты" style="max-width: 200px; text-align: center; text-transform: uppercase;">
-        <button id="join-room-btn">🔗 Подключиться</button>
-      </div>
-    </div>
-
-    <div class="chat-status" id="chat-status" style="display: none;">
-      ⏳ Ожидается собеседник...
-    </div>
-
-    <div id="chat-messages" style="display: none;">
-      <div class="typing-indicator" id="typing-indicator">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-    </div>
-
-    <div class="chat-input-area" id="chat-input-area" style="display: none;">
-      <button id="voice-btn" title="🎤 Голосовое сообщение"><i class="fas fa-microphone"></i></button>
-      <input type="text" id="chat-input" placeholder="Введите сообщение..." style="margin: 0;">
-      <button id="send-btn" title="📤 Отправить"><i class="fas fa-paper-plane"></i></button>
-      <button id="call-btn" title="📞 Позвонить"><i class="fas fa-phone"></i></button>
-    </div>
-  </div>
-
-  <!-- SETUP PAGE -->
-  <div id="setup-page" class="page">
-    <h1>🔑 Настройка ключей</h1>
-    
-    <div class="card">
-      <h2>🔐 Управление ключами</h2>
-      <p>Ваши ключи генерируются локально в браузере и никогда не отправляются на сервер. При создании новой комнаты автоматически генерируется новая пара ключей.</p>
-      
-      <div class="key-display" id="key-info" style="display: none;">
-        <label>Ваш публичный ключ (BASE64):</label>
-        <textarea id="pub-key-display" rows="3" readonly onclick="this.select()"></textarea>
-        <p class="copy-tooltip">👆 Кликните, чтобы выделить</p>
-        
-        <div class="key-fingerprint" id="key-fp" onclick="copyFingerprint()" title="👆 Кликните для копирования отпечатка"></div>
-        <p class="copy-tooltip">Отпечаток ключа (SHA-256)</p>
-      </div>
-      
-      <button id="manual-gen" class="action-buttons" style="width: 100%; justify-content: center;">
-        🔄 Перегенерировать ключи
-      </button>
-    </div>
-
-    <div class="card">
-      <h2>🔒 Безопасность</h2>
-      <p>Secure Hax использует асимметричное шифрование:</p>
-      <ul style="padding-left: 20px; margin-top: 15px;">
-        <li style="margin-bottom: 8px;">Ваш приватный ключ хранится только в вашем браузере</li>
-        <li style="margin-bottom: 8px;">Публичный ключ передаётся собеседнику при подключении</li>
-        <li style="margin-bottom: 8px;">Сообщения шифруются вашим публичным ключом</li>
-        <li>Расшифровать сообщение можно только вашим приватным ключом</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>⚠️ Важно</h2>
-      <p>⚠️ При обновлении страницы или закрытии вкладки все ключи и сообщения удаляются безвозвратно!</p>
-      <p style="margin-top: 10px;">💡 Для нового сеанса просто создайте новую комнату — новые ключи сгенерируются автоматически.</p>
-    </div>
+<div class="room-status-indicator" id="room-status-indicator">
+  <div class="room-status-ball" id="room-status-ball"></div>
+  <div class="room-info">
+    <div class="room-name" id="room-name">No Room</div>
+    <div class="participants-count" id="participants-count">0 participants</div>
   </div>
 </div>
 
@@ -186,43 +40,29 @@
 <div id="game-modal" class="game-modal">
   <div class="game-content">
     <div class="game-header">
-      <h3>🎮 Камень-Ножницы-Бумага</h3>
-      <button class="close-game" id="close-game-btn">✕</button>
+      <h3 id="game-title">Игра Камень-Ножницы-Бумага</h3>
+      <button class="close-game" id="close-game-btn">✖</button>
     </div>
     <div class="game-body">
-      <div class="game-status" id="game-status">
-        Игра начнётся, когда оба игрока сделают выбор
-      </div>
-      
-      <div class="round-info">
-        Раунд: <span id="current-round">1</span>/3
-      </div>
-      
+      <div id="game-status"></div>
+      <div class="round-info">Раунд: <span id="current-round">1</span> / 3</div>
       <div class="score-info">
-        <span id="my-score">Ваш счёт: 0</span> | 
-        <span id="opponent-score">Счёт противника: 0</span>
+        <span id="my-score">Ваш счет: 0</span> |
+        <span id="opponent-score">Счет противника: 0</span>
       </div>
-      
-      <div class="game-choices" id="game-choices" style="display: none;">
-        <button class="choice-btn" data-choice="rock">
-          <span class="emoji">✊</span>
-          Камень
-        </button>
-        <button class="choice-btn" data-choice="paper">
-          <span class="emoji">✋</span>
-          Бумага
-        </button>
-        <button class="choice-btn" data-choice="scissors">
-          <span class="emoji">✌️</span>
-          Ножницы
-        </button>
+      <div class="game-choices" id="game-choices">
+        <button class="choice-btn" data-choice="rock">🪨 Камень</button>
+        <button class="choice-btn" data-choice="paper">📄 Бумага</button>
+        <button class="choice-btn" data-choice="scissors">✂️ Ножницы</button>
       </div>
-      
-      <div class="game-timer" id="game-timer" style="display: none;">
-        10
+      <div class="game-actions">
+        <button id="accept-game-btn" class="game-btn primary">Играть!</button>
+        <button id="decline-game-btn" class="game-btn secondary">Отклонить</button>
+        <button id="play-again-btn" class="game-btn primary" style="display:none;">Сыграть ещё</button>
       </div>
-      
-      <div id="game-buttons">
+      <div class="timer">
+        <div class="timer-bar" id="timer-bar"></div>
+        <div class="timer-text">Время: <span id="timer-count">10</span>с</div>
       </div>
     </div>
   </div>
@@ -231,486 +71,760 @@
 <!-- Call Modal -->
 <div id="call-modal" class="call-modal">
   <div class="call-content">
-    <div class="call-status" id="call-status">
-      Звонок...
-    </div>
-    <div class="call-timer" id="call-timer">
-      00:00
-    </div>
+    <div class="call-status" id="call-status">Звонок...</div>
+    <div class="call-timer" id="call-timer">00:00</div>
     <div class="call-buttons" id="call-buttons">
+      <!-- Buttons will be added dynamically based on state -->
     </div>
   </div>
 </div>
 
-<!-- SOCKS MODE MESSAGE -->
-<div id="socks-message">
-  🧦 SOCKS MODE 🧦
+<nav id="nav-menu">
+  <button data-page="home" class="active">🏠 Главная</button>
+  <button data-page="chat">💬 Чат</button>
+  <button data-page="setup">🔑 Настройка</button>
+</nav>
+
+<div class="container">
+  <div id="chat-page" class="page">
+    <h1>💬 Secure Chat</h1>
+    
+    <div class="card">
+      <div class="chat-status" id="chat-status">🔒 Не подключено</div>
+    </div>
+    
+    <div class="card" id="room-setup">
+    <h4>Создать или подключиться</h4>
+    <button id="create-room-btn">🆕 Создать комнату</button>
+    <div style="margin: 15px 0;">— или —</div>
+    <input type="text" id="join-room-input" placeholder="Введите код комнаты..." maxlength="20">
+    <button id="join-room-btn">🚪 Подключиться</button>
+      
+      <div id="room-code-display" style="display:none;"></div>
+    </div>
+    
+    <div class="card" id="chat-messages" style="display:none;">
+      <div class="typing-indicator" id="typing-indicator">
+        <span style="font-size: 0.85rem;">Печатает</span>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+    
+    <div class="card chat-input-area" style="display:none;" id="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Введите сообщение...">
+      <button id="voice-btn" title="Голосовое сообщение">🎤</button>
+      <button id="call-btn" title="Позвонить">📞</button>
+      <button id="send-btn">📤</button>
+    </div>
+  </div>
+  <div id="home-page" class="page active">
+    <h1>Secure Hax Messenger 💬🔐</h1>
+
+    <div id="socks-message">🧦 SOCKS MODE! 🧦</div>
+    <div id="confetti-container"></div>
+
+    <div class="card scroll-reveal" style="text-align: center;">
+      <h2>🎮 Добро пожаловать в будущее мессенджеров!</h2>
+      <div class="homepage-images">
+        <img src="https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=300&h=150&fit=crop" alt="Cybersecurity" class="homepage-image">
+        <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=300&h=150&fit=crop" alt="Encrypted Communication" class="homepage-image">
+        <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=300&h=150&fit=crop" alt="Modern Interface" class="homepage-image">
+      </div>
+      <p style="text-align: left;">
+        <strong>Secure Hax Messenger</strong> — это не просто чат. Это полноценный мессенджер с <strong>военным уровнем шифрования</strong>, работающий в реальном времени прямо в браузере!
+      </p>
+      <div style="margin: 20px 0; padding: 15px; background: rgba(255,90,171,0.1); border-radius: 10px; border-left: 4px solid var(--accent-color);">
+        <strong>🔒 Почему это безопасно?</strong><br>
+        Все сообщения шифруются <strong>end-to-end</strong> с помощью TweetNaCl. Даже сервер не видит содержимое ваших сообщений!
+      </div>
+    </div>
+
+    <div class="card scroll-reveal">
+      <h2>✨ Возможности</h2>
+      <div style="display: grid; gap: 15px; margin-top: 15px;">
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>🔐 End-to-End шифрование</strong><br>
+          <small>Ваши ключи генерируются локально. Никто не имеет к ним доступа.</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>⚡ Мгновенные сообщения</strong><br>
+          <small>Технология Firebase Realtime Database для обмена в реальном времени.</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>🚫 Без регистрации</strong><br>
+          <small>Никаких номеров телефонов, email или персональных данных.</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>👀 Индикатор печати</strong><br>
+          <small>Видите когда собеседник печатает сообщение (как в Telegram!).</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>🎤 Голосовые сообщения</strong><br>
+          <small>Записывайте и отправляйте голосовые сообщения одним кликом!</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>📞 Голосовые звонки</strong><br>
+          <small>Звоните собеседнику прямо в чате (без видео).</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>🎨 Красивый интерфейс</strong><br>
+          <small>Современный дизайн с анимациями и спецэффектами.</small>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <strong>🧦 Секретные режимы</strong><br>
+          <small>Easter eggs и скрытые функции для самых внимательных...</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="card scroll-reveal">
+      <h2>🚀 Как начать?</h2>
+      <ol style="text-align: left; line-height: 2; font-size: 1.05rem;">
+        <li><strong>Перейдите во вкладку 💬 Чат</strong> в меню</li>
+        <li><strong>Создайте комнату</strong> — получите уникальный код (например: HAX-A1B2C3)</li>
+        <li><strong>Поделитесь кодом</strong> с другом любым способом</li>
+        <li><strong>Дождитесь подключения</strong> — увидите статус "🟢 Подключено!"</li>
+        <li><strong>Общайтесь безопасно!</strong> Текстовые и голосовые сообщения (кнопка 🎤) 🔐</li>
+      </ol>
+    </div>
+
+    <div class="card scroll-reveal">
+      <h2>🛡️ Технологии</h2>
+      <p style="text-align: left; line-height: 1.8;">
+        <strong>TweetNaCl</strong> — криптографическая библиотека, используемая в Signal и других защищённых мессенджерах.<br>
+        <strong>Firebase Realtime Database</strong> — для синхронизации в реальном времени.<br>
+        <strong>Asymmetric Encryption</strong> — публичные/приватные ключи для безопасного обмена.<br>
+        <strong>Client-side only</strong> — весь код выполняется в вашем браузере.
+      </p>
+    </div>
+
+    <div class="card scroll-reveal" style="background: rgba(255,90,171,0.1); border: 2px solid var(--accent-color);">
+      <h2>⚠️ Важно знать</h2>
+      <ul style="text-align: left; line-height: 1.8;">
+        <li>Сообщения <strong>не сохраняются</strong> после закрытия комнаты</li>
+        <li>Один код комнаты = <strong>одна пара</strong> собеседников</li>
+        <li>Не делитесь кодом комнаты публично</li>
+        <li>Храните свои ключи в безопасности</li>
+        <li>Это <strong>beta-версия</strong> — возможны баги</li>
+      </ul>
+    </div>
+
+    <div class="card scroll-reveal">
+      <h2>🎭 Пасхалки</h2>
+      <p style="text-align: left; color: var(--header-color);">
+        💀 Кликни на <strong>Sans</strong> внизу страницы 3 раза...<br>
+        🧦 Введи слово "<strong>socks</strong>" в чате...<br>
+        🎵 Исследуй интерфейс — найдёшь ещё сюрпризы!
+      </p>
+    </div>
+  </div>
+
+  <section id="setup-page" class="page">
+    <h1>🔑 Настройка ключей</h1>
+
+    <div class="card">
+      <h2>Генерация ключей</h2>
+      <p>Ключи генерируются автоматически при создании комнаты.</p>
+      <button id="manual-gen">🔄 Перегенерировать ключи</button>
+      
+      <div id="key-info" style="margin-top: 15px; display:none;">
+        <label>Ваш публичный ключ:</label>
+        <textarea id="pub-key-display" rows="3" readonly></textarea>
+        <small style="opacity:0.7;">Отпечаток: <code id="key-fp">N/A</code></small>
+      </div>
+    </div>
+  </section>
 </div>
 
-<!-- CONFETTI CONTAINER -->
-<div id="confetti-container"></div>
-
-<!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
 
-<!-- SANS EASTER EGG -->
-<div style="text-align: center; margin: 30px 0; padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));">
-  <div id="sans-container">
-    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👻</text></svg>" 
-         alt="Sans" 
-         id="sans-image"
-         width="50"
-         height="50"
-         onclick="handleSansClick()">
-    <div id="sans-counter">0</div>
-  </div>
-</div>
-
 <footer>
-  <div class="footer-content">
-    <div class="footer-links">
-      <a href="https://t.me/bluzn" target="_blank">✈️ Telegram</a>
-      <a href="https://github.com/0xMewhx/SecureHxMessenger" target="_blank">💻 GitHub</a>
-      <button id="theme-toggle" title="🌙 Сменить тему">🌙</button>
+  <div class="footer-links">
+    <div id="sans-container">
+      <img id="sans-image"
+           src="https://avatanplus.com/files/resources/mid/57b39ece5502b15695a4560c.png">
+      <div id="sans-counter">0</div>
     </div>
-    <p class="footer-message" style="margin-top: 15px; opacity: 0.7; font-style: italic;">
-      Если дочитали до сюда — вы либо мой друг, либо параноик. В любом случае, уважаю. 🔐
-    </p>
-    <p class="footer-copyright">
-      © 2025 Secure Hax Inc. | Made with 💜 by <a href="https://t.me/bluzn" style="display: inline;">Блюз</a>
-    </p>
+    <button id="theme-toggle">🎨</button>
+    <a href="https://t.me/bluzn" target="_blank" title="Telegram">
+      <i class="fab fa-telegram fa-2x"></i>
+    </a>
   </div>
+  <small style="margin-top: 10px;">
+    © 2025 Secure Hax Inc. | Made with 💜 by Блюз
+  </small>
 </footer>
 
+<script src="nacl.min.js"></script>
+<script src="nacl-util.min.js"></script>
 <script type="module">
-// ============ CONFIG & FIREBASE ============
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, push, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, set, onValue, push, serverTimestamp, onDisconnect } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC2J3bVJ5g0hRkVrLsZds7sT7k0",
-  authDomain: "secure-hax-messenger.firebaseapp.com",
-  databaseURL: "https://secure-hax-messenger-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "secure-hax-messenger",
-  storageBucket: "secure-hax-messenger.appspot.com",
-  messagingSenderId: "1254007090",
-  appId: "1:1254007090:web:3e8c6a8e0f2d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6"
+  apiKey: "AIzaSyCmC_cXIvvA4EPAezjzsInBf_Ng-V4jwfk",
+  authDomain: "hxchatt.firebaseapp.com",
+  databaseURL: "https://hxchatt-default-rtdb.firebaseio.com",
+  projectId: "hxchatt",
+  storageBucket: "hxchatt.firebasestorage.app",
+  messagingSenderId: "382150861330",
+  appId: "1:382150861330:web:ab20a639246cd48bac6ecb"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ============ TWEETNACL CRYPTO ============
-import nacl from "https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js";
-import sha256 from "https://cdn.jsdelivr.net/npm/js-sha256@0.9.0/build/sha256.min.js";
-
 // ============ STATE ============
 const state = {
-  userId: generateUserId(),
-  roomId: null,
-  isHost: false,
+  activePage: 'home',
+  sansClicks: 0,
+  socksMode: false,
+  rainbowMode: false,
   myKeyPair: null,
   peerPublicKey: null,
-  activePage: 'home',
-  isMobile: false,
+  roomId: null,
+  userId: 'user_' + Math.random().toString(36).substr(2, 9),
+  isHost: false,
+  isMobile: isMobileDevice(),
+  participants: 0,
+  peerOnline: false,
+  peerLeft: false,
+  currentTheme: 'normal',
   gameState: {
     active: false,
+    isHost: false,
     round: 1,
     myScore: 0,
     opponentScore: 0,
     myChoice: null,
     opponentChoice: null,
-    isHost: false,
-    timer: null,
     timeLeft: 10,
+    timer: null,
+    waitingForAccept: false,
     waitingForChoice: false
   },
   callState: {
     active: false,
     isCaller: false,
-    timeElapsed: 0,
     callTimer: null,
-    pc: null,
+    timeElapsed: 0,
     localStream: null,
-    remoteStream: null
-  },
-  sansClickCount: 0,
-  peerOnline: false,
-  peerLeft: false
+    remoteStream: null,
+    pc: null
+  }
 };
 
-// ============ DOM ELEMENTS ============
+// Умное определение мобильного устройства
+function isMobileDevice() {
+  // Основные критерии для мобильных устройств
+  const userAgent = navigator.userAgent.toLowerCase();
+  const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'phone', 'tablet'];
+  
+  // Проверяем User Agent на наличие мобильных ключевых слов
+  const isMobileUA = mobileKeywords.some(keyword => userAgent.includes(keyword));
+  
+  // Проверяем сенсорные возможности
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  
+  // Проверяем размер экрана (более консервативный порог)
+  const isSmallScreen = window.innerWidth <= 768;
+  
+  // Проверяем соотношение сторон (портретная ориентация часто указывает на мобильное)
+  const isPortrait = window.innerHeight >= window.innerWidth;
+  
+  // Логика определения мобильного устройства
+  // Устройство считается мобильным если:
+  // 1. User Agent указывает на мобильное устройство ИЛИ
+  // 2. Есть сенсорный экран И маленький экран И портретная ориентация
+  const isMobile = isMobileUA || (hasTouch && isSmallScreen && isPortrait);
+  
+  // Логируем для отладки
+  console.log('📱 Mobile Detection:', {
+    userAgent: isMobileUA,
+    touch: hasTouch,
+    smallScreen: isSmallScreen,
+    portrait: isPortrait,
+    final: isMobile
+  });
+  
+  return isMobile;
+}
+
+// Mobile Detection and Responsive Behavior
+function checkMobile() {
+  state.isMobile = isMobileDevice();
+  
+  // Обновляем CSS класс для тела документа
+  document.body.classList.toggle('mobile-device', state.isMobile);
+  document.body.classList.toggle('desktop-device', !state.isMobile);
+  
+  // Логируем изменения
+  console.log('🔄 checkMobile():', {
+    isMobile: state.isMobile,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    deviceClass: state.isMobile ? 'mobile-device' : 'desktop-device'
+  });
+  
+  if (state.isMobile && state.roomId) {
+    // Auto-show room status indicator on mobile when in chat
+    const indicator = document.getElementById('room-status-indicator');
+    if (indicator) indicator.classList.add('show');
+  } else {
+    const indicator = document.getElementById('room-status-indicator');
+    if (indicator) indicator.classList.remove('show');
+  }
+}
+
+// Room Status Indicator Functions
+function updateRoomStatus() {
+  const indicator = document.getElementById('room-status-indicator');
+  const statusBall = document.getElementById('room-status-ball');
+  const roomName = document.getElementById('room-name');
+  const participantsCount = document.getElementById('participants-count');
+  
+  if (!state.roomId) {
+    indicator.classList.remove('show');
+    return;
+  }
+  
+  roomName.textContent = state.roomId;
+  
+  // Update status ball based on peer status
+  statusBall.className = 'room-status-ball';
+  if (state.peerLeft) {
+    statusBall.classList.add('offline');
+  } else if (state.peerOnline) {
+    statusBall.classList.add('online');
+  } else {
+    statusBall.classList.add('offline');
+  }
+  
+  // Update participants count
+  const count = state.peerOnline ? 2 : (state.peerLeft ? 1 : 1);
+  participantsCount.textContent = `\( {count} participant \){count !== 1 ? 's' : ''}`;
+  
+  // Show indicator on mobile
+  if (state.isMobile) {
+    indicator.classList.add('show');
+  }
+}
+
+function showRoomStatus() {
+  updateRoomStatus();
+}
+
+// Theme Toggle Functionality
+const themeToggle = document.getElementById('theme-toggle');
+
+function toggleTheme() {
+  if (state.currentTheme === 'normal') {
+    document.body.classList.add('hacker-theme');
+    state.currentTheme = 'hacker';
+    themeToggle.innerHTML = '🌸';
+    showToast('Переключено на хакерскую тему! 🖤');
+    localStorage.setItem('haxTheme', 'hacker');
+  } else {
+    document.body.classList.remove('hacker-theme');
+    state.currentTheme = 'normal';
+    themeToggle.innerHTML = '🎨';
+    showToast('Переключено на обычную тему!');
+    localStorage.setItem('haxTheme', 'normal');
+  }
+}
+
+// Load saved theme
+function loadTheme() {
+  const savedTheme = localStorage.getItem('haxTheme');
+  if (savedTheme === 'hacker') {
+    document.body.classList.add('hacker-theme');
+    state.currentTheme = 'hacker';
+    themeToggle.innerHTML = '🌸';
+  } else {
+    state.currentTheme = 'normal';
+    themeToggle.innerHTML = '🎨';
+  }
+}
+
+themeToggle.addEventListener('click', toggleTheme);
+
+// ============ PARTICLES ============
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const particles = [];
+for(let i = 0; i < 50; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: (Math.random() - 0.5) * 0.5,
+    size: Math.random() * 2 + 1
+  });
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+    if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  // Принудительно обновляем определение мобильного устройства
+  setTimeout(() => {
+    checkMobile();
+    console.log('📱 Mobile Detection (resize):', {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isMobile: state.isMobile
+    });
+  }, 100);
+});
+
+// ============ NAVIGATION ============
+const pages = document.querySelectorAll('.page');
+const navButtons = document.querySelectorAll('#nav-menu button');
 const menuBtn = document.getElementById('menu-btn');
 const navMenu = document.getElementById('nav-menu');
-const roomCodeDisplay = document.getElementById('room-code-display');
-const createRoomBtn = document.getElementById('create-room-btn');
-const joinRoomBtn = document.getElementById('join-room-btn');
-const joinRoomInput = document.getElementById('join-room-input');
+
+function toggleMenu() {
+  navMenu.classList.toggle('active');
+  menuBtn.innerHTML = navMenu.classList.contains('active') ? '✖ Close' : '≡ Menu';
+}
+
+menuBtn.addEventListener('click', toggleMenu);
+
+function showPage(pageId) {
+  state.activePage = pageId;
+  pages.forEach(p => p.classList.remove('active'));
+  navButtons.forEach(b => {
+    b.classList.remove('active');
+    if(b.getAttribute('data-page') === pageId) b.classList.add('active');
+  });
+  const page = document.getElementById(pageId + '-page');
+  if(page) page.classList.add('active');
+}
+
+navButtons.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showPage(e.target.getAttribute('data-page'));
+    toggleMenu();
+  });
+});
+
+// ============ VOICE MESSAGES ============
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+const voiceBtn = document.getElementById('voice-btn');
+
+voiceBtn.addEventListener('click', async () => {
+  if (!state.roomId || !state.peerPublicKey) {
+    showToast('Сначала подключитесь к комнате!');
+    return;
+  }
+  
+  if (!isRecording) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        await sendVoiceMessage(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      isRecording = true;
+      voiceBtn.classList.add('recording');
+      voiceBtn.textContent = '⏹️';
+      showToast('🎤 Запись голосового сообщения...');
+      
+    } catch(err) {
+      console.error('Ошибка доступа к микрофону:', err);
+      showToast('Ошибка: нет доступа к микрофону');
+    }
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.textContent = '🎤';
+  }
+});
+
+async function sendVoiceMessage(audioBlob) {
+  try {
+    showToast('⏳ Отправка голосового сообщения...');
+    
+    // Convert audio to base64
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    
+    reader.onloadend = async () => {
+      const base64Audio = reader.result; // data:audio/webm;base64,xxxxx
+      
+      // Send message with base64 audio
+      const encrypted = encryptMessage(`[VOICE]:${base64Audio}`);
+      
+      const messageRef = push(ref(db, `rooms/${state.roomId}/messages`));
+      await set(messageRef, {
+        sender: state.userId,
+        ciphertext: encrypted,
+        type: 'voice',
+        timestamp: serverTimestamp()
+      });
+      
+      showToast('✅ Голосовое сообщение отправлено!');
+    };
+    
+  } catch(err) {
+    console.error('Ошибка отправки:', err);
+    showToast('Ошибка отправки голосового сообщения');
+  }
+}
+
+// ============ SANS EASTER EGG ============
+const sansImg = document.getElementById('sans-image');
+const sansCounter = document.getElementById('sans-counter');
+const socksMsg = document.getElementById('socks-message');
+const confettiContainer = document.getElementById('confetti-container');
+
+sansImg.addEventListener('click', () => {
+  if(state.activePage !== 'home') return;
+  
+  state.sansClicks++;
+  sansCounter.textContent = state.sansClicks;
+  sansCounter.classList.add('show');
+  
+  if(state.sansClicks === 3) {
+    activateSansMegalovania();
+  } else {
+    createConfetti(20);
+  }
+});
+
+function activateSansMegalovania() {
+  state.rainbowMode = true;
+  document.body.classList.add('rainbow-mode');
+  socksMsg.innerHTML = '💀 YOU\'RE GONNA HAVE A BAD TIME 💀';
+  socksMsg.classList.add('active');
+  createConfetti(200);
+  
+  setTimeout(() => {
+    socksMsg.classList.remove('active');
+    showToast('...but nobody came.', 3000);
+  }, 3000);
+  
+  setTimeout(() => {
+    document.body.classList.remove('rainbow-mode');
+    state.rainbowMode = false;
+    state.sansClicks = 0;
+    sansCounter.classList.remove('show');
+  }, 10000);
+}
+
+function createConfetti(count) {
+  const colors = ['#ff0000', '#ffff00', '#0000ff', '#ff5aab', '#00ff00'];
+  for(let i = 0; i < count; i++) {
+    const conf = document.createElement('div');
+    conf.className = 'confetti';
+    conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    conf.style.width = conf.style.height = Math.random() * 10 + 5 + 'px';
+    conf.style.animationName = i % 2 === 0 ? 'fall-left' : 'fall-right';
+    conf.style.animationDelay = Math.random() * 0.5 + 's';
+    confettiContainer.appendChild(conf);
+    conf.addEventListener('animationend', () => conf.remove());
+  }
+}
+
+function activateSocksMode() {
+  if(state.socksMode) return;
+  state.socksMode = true;
+  document.body.classList.add('socks-mode');
+  socksMsg.innerHTML = '🧦 SOCKS MODE ACTIVATED! 🧦<br><small style="font-size:1.5rem;">now you\'re one of us... uwu</small>';
+  socksMsg.classList.add('active');
+  createConfetti(150);
+  
+  setTimeout(() => {
+    socksMsg.classList.remove('active');
+  }, 3000);
+  
+  showToast('Socks mode активирован! 🧦✨', 3000);
+}
+
+// ============ TOAST ============
+const toastContainer = document.getElementById('toast-container');
+
+function showToast(msg, ms = 2600) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  toastContainer.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, ms);
+}
+
+// ============ CRYPTO ============
+function generateKeyPair() {
+  const kp = nacl.box.keyPair();
+  state.myKeyPair = { publicKey: kp.publicKey, secretKey: kp.secretKey };
+  return nacl.util.encodeBase64(kp.publicKey);
+}
+
+async function sha256hex(u8) {
+  if(!crypto.subtle) return 'N/A';
+  try {
+    const hash = await crypto.subtle.digest('SHA-256', u8);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+  } catch(e) {
+    return 'Error';
+  }
+}
+
+function encryptMessage(text) {
+  const nonce = nacl.randomBytes(24);
+  const encoder = new TextEncoder();
+  const msgU8 = encoder.encode(text);
+  const box = nacl.box(msgU8, nonce, state.peerPublicKey, state.myKeyPair.secretKey);
+  return nacl.util.encodeBase64(nonce) + ':' + nacl.util.encodeBase64(box);
+}
+
+function decryptMessage(ciphertext) {
+  const parts = ciphertext.split(':');
+  if(parts.length !== 2) throw new Error('Invalid format');
+  
+  const nonce = nacl.util.decodeBase64(parts[0]);
+  const ct = nacl.util.decodeBase64(parts[1]);
+  const msgU8 = nacl.box.open(ct, nonce, state.peerPublicKey, state.myKeyPair.secretKey);
+  if(!msgU8) throw new Error('Decryption failed');
+  
+  const decoder = new TextDecoder();
+  return decoder.decode(msgU8);
+}
+
+// ============ FIREBASE ROOM LOGIC ============
 const chatStatus = document.getElementById('chat-status');
 const chatMessages = document.getElementById('chat-messages');
 const chatInputArea = document.getElementById('chat-input-area');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
-const voiceBtn = document.getElementById('voice-btn');
-const callBtn = document.getElementById('call-btn');
+const roomSetup = document.getElementById('room-setup');
+const roomCodeDisplay = document.getElementById('room-code-display');
+const createRoomBtn = document.getElementById('create-room-btn');
+const joinRoomBtn = document.getElementById('join-room-btn');
+const joinRoomInput = document.getElementById('join-room-input');
 const typingIndicator = document.getElementById('typing-indicator');
-const sansImage = document.getElementById('sans-image');
-const sansCounter = document.getElementById('sans-counter');
-const toastContainer = document.getElementById('toast-container');
+const callBtn = document.getElementById('call-btn');
 
-// ============ HELPER FUNCTIONS ============
-function generateUserId() {
-  return Math.random().toString(36).substring(2, 15);
-}
+let typingTimeout = null;
+
+// Typing indicator logic
+chatInput.addEventListener('input', () => {
+  if(!state.roomId) return;
+  
+  // Check for game command
+  const text = chatInput.value.toLowerCase().trim();
+  if (text === 'играть') {
+    startGameInvitation();
+    return; // Don't continue typing logic for game command
+  }
+  
+  // Set typing status
+  set(ref(db, `rooms/\( {state.roomId}/typing/ \){state.userId}`), true);
+  
+  // Clear after 2 seconds
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    set(ref(db, `rooms/\( {state.roomId}/typing/ \){state.userId}`), false);
+  }, 2000);
+});
 
 function generateRoomCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'HAX-';
-  for(let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  return 'HAX-' + Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
-async function sha256hex(message) {
-  return sha256(message);
-}
+// ============ GAME SYSTEM ============
 
-function checkMobile() {
-  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                         (window.innerWidth <= 768 && 'ontouchstart' in window);
-  state.isMobile = isMobileDevice;
-  
-  if (isMobileDevice) {
-    document.body.classList.add('mobile-device');
-    document.body.classList.remove('desktop-device');
-  } else {
-    document.body.classList.add('desktop-device');
-    document.body.classList.remove('mobile-device');
-  }
-}
-
-function toggleMenu() {
-  navMenu.classList.toggle('active');
-}
-
-function showPage(pageName) {
-  // Update menu buttons
-  document.querySelectorAll('#nav-menu button').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.dataset.page === pageName) {
-      btn.classList.add('active');
-    }
-  });
-  
-  // Hide all pages
-  document.querySelectorAll('.page').forEach(page => {
-    page.classList.remove('active');
-  });
-  
-  // Show selected page
-  const selectedPage = document.getElementById(`${pageName}-page`);
-  if (selectedPage) {
-    selectedPage.classList.add('active');
-    state.activePage = pageName;
-  }
-  
-  // Hide nav menu
-  navMenu.classList.remove('active');
-}
-
-function showToast(message, duration = 3000) {
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `
-    <span class="toast-icon">🔔</span>
-    <span>${message}</span>
-    <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-  `;
-  toastContainer.appendChild(toast);
-  
-  // Trigger animation
-  setTimeout(() => toast.classList.add('show'), 10);
-  
-  // Auto remove
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 600);
-  }, duration);
-}
-
-// ============ CRYPTO FUNCTIONS ============
-function generateKeyPair() {
-  const keyPair = nacl.box.keyPair();
-  state.myKeyPair = keyPair;
-  const pubKeyBase64 = nacl.util.encodeBase64(keyPair.publicKey);
-  return pubKeyBase64;
-}
-
-function encryptMessage(text) {
-  if (!state.peerPublicKey || !state.myKeyPair) {
-    throw new Error('Keys not initialized');
-  }
-  
-  const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  const messageUint8 = nacl.util.decodeUTF8(text);
-  const encrypted = nacl.box(messageUint8, nonce, state.peerPublicKey, state.myKeyPair.secretKey);
-  
-  // Combine nonce + ciphertext for storage
-  const combined = new Uint8Array(nonce.length + encrypted.length);
-  combined.set(nonce);
-  combined.set(encrypted, nonce.length);
-  
-  return nacl.util.encodeBase64(combined);
-}
-
-function decryptMessage(encryptedBase64) {
-  if (!state.myKeyPair || !state.peerPublicKey) {
-    throw new Error('Keys not initialized');
-  }
-  
-  try {
-    const combined = nacl.util.decodeBase64(encryptedBase64);
-    const nonce = combined.slice(0, nacl.box.nonceLength);
-    const ciphertext = combined.slice(nacl.box.nonceLength);
-    
-    const decrypted = nacl.box.open(ciphertext, nonce, state.peerPublicKey, state.myKeyPair.secretKey);
-    
-    if (!decrypted) {
-      throw new Error('Decryption failed');
-    }
-    
-    return nacl.util.encodeUTF8(decrypted);
-  } catch (e) {
-    throw new Error('Failed to decrypt message');
-  }
-}
-
-// ============ PARTICLE SYSTEM ============
-const canvas = document.getElementById('particle-canvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-function createParticle() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    size: Math.random() * 2 + 1,
-    speedX: (Math.random() - 0.5) * 0.5,
-    speedY: (Math.random() - 0.5) * 0.5,
-    opacity: Math.random() * 0.5 + 0.2
-  };
-}
-
-function initParticles() {
-  particles = [];
-  const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
-  for (let i = 0; i < particleCount; i++) {
-    particles.push(createParticle());
-  }
-}
-
-function drawParticles() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  particles.forEach(particle => {
-    ctx.beginPath();
-    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
-    ctx.fill();
-    
-    particle.x += particle.speedX;
-    particle.y += particle.speedY;
-    
-    // Bounce off edges
-    if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
-    if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
-  });
-  
-  requestAnimationFrame(drawParticles);
-}
-
-// ============ SANS EASTER EGG ============
-function handleSansClick() {
-  state.sansClickCount++;
-  sansCounter.textContent = state.sansClickCount;
-  sansCounter.classList.add('show');
-  
-  if (state.sansClickCount >= 3) {
-    activateSocksMode();
-    state.sansClickCount = 0;
-    sansCounter.classList.remove('show');
-    sansCounter.textContent = '0';
-  }
-}
-
-function activateSocksMode() {
-  document.body.classList.toggle('socks-mode');
-  const socksMessage = document.getElementById('socks-message');
-  socksMessage.classList.add('active');
-  
-  showToast('🧦 SOCKS MODE ACTIVATED! 🧦', 3000);
-  
-  setTimeout(() => {
-    socksMessage.classList.remove('active');
-  }, 3000);
-}
-
-// ============ CONFETTI ============
-function createConfetti(count = 100) {
-  const container = document.getElementById('confetti-container');
-  const colors = ['#ff5aab', '#8a2be2', '#00ff41', '#ffeb3b', '#ff5722', '#00bcd4'];
-  
-  for (let i = 0; i < count; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = 'confetti';
-    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-    confetti.style.left = Math.random() > 0.5 ? '100%' : '0%';
-    confetti.style.top = '50%';
-    confetti.style.animation = Math.random() > 0.5 ? 'fall-left 3s forwards' : 'fall-right 3s forwards';
-    confetti.style.animationDelay = Math.random() * 0.5 + 's';
-    container.appendChild(confetti);
-    
-    // Remove after animation
-    setTimeout(() => confetti.remove(), 3500);
-  }
-}
-
-// ============ ROOM STATUS ============
-function showRoomStatus() {
-  const statusEl = document.getElementById('room-status');
-  const statusBall = document.getElementById('status-ball');
-  const roomNameEl = document.getElementById('status-room-name');
-  const participantsEl = document.getElementById('status-participants');
-  
-  if (state.roomId) {
-    roomNameEl.textContent = state.roomId;
-    participantsEl.textContent = state.peerOnline ? '2/2' : '1/2';
-    
-    if (state.peerOnline) {
-      statusBall.className = 'room-status-ball online';
-    } else {
-      statusBall.className = 'room-status-ball offline';
-    }
-    
-    statusEl.classList.add('show');
-  } else {
-    statusEl.classList.remove('show');
-  }
-}
-
-// ============ THEME ============
-function toggleTheme() {
-  document.body.classList.toggle('hacker-theme');
-  const isHacker = document.body.classList.contains('hacker-theme');
-  document.getElementById('theme-toggle').textContent = isHacker ? '💚' : '🌙';
-  localStorage.setItem('hackerTheme', isHacker);
-}
-
-function loadTheme() {
-  const isHacker = localStorage.getItem('hackerTheme') === 'true';
-  if (isHacker) {
-    document.body.classList.add('hacker-theme');
-    document.getElementById('theme-toggle').textContent = '💚';
-  }
-}
-
-// ============ GAME FUNCTIONS ============
 function startGameInvitation() {
-  if (!state.roomId) return;
+  if (state.gameState.active) {
+    showToast('Игра уже идёт!');
+    return;
+  }
   
   state.gameState.active = true;
   state.gameState.isHost = true;
+  state.gameState.waitingForAccept = true;
+  state.gameState.round = 1;
+  state.gameState.myScore = 0;
+  state.gameState.opponentScore = 0;
   
-  // Send invitation
+  // Send game invitation to Firebase
   set(ref(db, `rooms/${state.roomId}/game/invitation`), {
     from: state.userId,
     timestamp: Date.now()
   });
   
-  showGameModal('Ожидаем ответа от собеседника...', 'invite');
-  showToast('Приглашение отправлено! 🎮');
+  showGameModal('Ожидание принятия игры...', 'accept');
+  showToast('Приглашение отправлено! Ждём ответ... 🎮');
 }
 
-function makeChoice(choice) {
-  if (!state.gameState.waitingForChoice) return;
-  
-  state.gameState.myChoice = choice;
-  state.gameState.waitingForChoice = false;
-  
-  // Disable buttons
-  document.querySelectorAll('.choice-btn').forEach(btn => {
-    btn.disabled = true;
-  });
-  
-  // Send choice
-  set(ref(db, `rooms/${state.roomId}/game/choice/${state.userId}`), {
-    choice: choice,
-    timestamp: Date.now()
-  });
-  
-  // Update UI
-  document.getElementById('game-timer').style.display = 'none';
-  document.getElementById('game-choices').style.display = 'none';
-  document.getElementById('game-status').textContent = 'Ваш выбор отправлен! Ожидаем противника...';
-  
-  // Clear local timer
-  if (state.gameState.timer) {
-    clearInterval(state.gameState.timer);
-  }
-}
-
-function determineWinner(choice1, choice2) {
-  if (choice1 === choice2) return 'tie';
-  if (
-    (choice1 === 'rock' && choice2 === 'scissors') ||
-    (choice1 === 'paper' && choice2 === 'rock') ||
-    (choice1 === 'scissors' && choice2 === 'paper')
-  ) return 'player1';
-  return 'player2';
-}
-
-function getChoiceName(choice) {
-  const names = { rock: '✊ Камень', paper: '✋ Бумага', scissors: '✌️ Ножницы' };
-  return names[choice] || choice;
-}
-
-function showGameModal(statusText, mode) {
+function showGameModal(statusText, mode = 'choices') {
   const modal = document.getElementById('game-modal');
   const status = document.getElementById('game-status');
   const choices = document.getElementById('game-choices');
-  const timer = document.getElementById('game-timer');
-  const buttons = document.getElementById('game-buttons');
+  const acceptBtn = document.getElementById('accept-game-btn');
+  const declineBtn = document.getElementById('decline-game-btn');
+  const playAgainBtn = document.getElementById('play-again-btn');
+  const timerBar = document.getElementById('timer-bar');
+  const timerCount = document.getElementById('timer-count');
   
   status.textContent = statusText;
-  choices.style.display = 'none';
-  timer.style.display = 'none';
-  buttons.innerHTML = '';
   modal.classList.add('active');
   
-  if (mode === 'invite') {
-    buttons.innerHTML = `
-      <button class="game-btn" onclick="closeGameModal(); state.gameState.active = false;">Отмена</button>
-    `;
-  } else if (mode === 'accept') {
-    buttons.innerHTML = `
-      <button class="game-btn" id="accept-game-btn">Принять</button>
-      <button class="game-btn decline" id="decline-game-btn">Отклонить</button>
-    `;
+  // Reset all elements
+  choices.style.display = 'none';
+  acceptBtn.style.display = 'none';
+  declineBtn.style.display = 'none';
+  playAgainBtn.style.display = 'none';
+  timerBar.style.width = '100%';
+  
+  if (mode === 'accept') {
+    acceptBtn.style.display = 'inline-block';
+    declineBtn.style.display = 'inline-block';
   } else if (mode === 'choices') {
     choices.style.display = 'flex';
-    timer.style.display = 'block';
-    timer.textContent = '10';
   } else if (mode === 'result') {
-    buttons.innerHTML = `
-      <button class="game-btn" id="play-again-btn">Играть снова</button>
-      <button class="game-btn" onclick="closeGameModal(); state.gameState.active = false;">Выйти</button>
-    `;
+    playAgainBtn.style.display = 'inline-block';
   }
 }
 
@@ -718,16 +832,65 @@ function closeGameModal() {
   const modal = document.getElementById('game-modal');
   modal.classList.remove('active');
   
+  // Clear timer
   if (state.gameState.timer) {
     clearInterval(state.gameState.timer);
   }
 }
 
+function makeChoice(choice) {
+  if (!state.gameState.active || !state.gameState.waitingForChoice) {
+    return;
+  }
+  
+  state.gameState.myChoice = choice;
+  state.gameState.waitingForChoice = false;
+  
+  // Disable choices
+  document.querySelectorAll('.choice-btn').forEach(btn => {
+    btn.disabled = true;
+  });
+  
+  // Send choice to Firebase
+  set(ref(db, `rooms/\( {state.roomId}/game/choice/ \){state.userId}`), {
+    choice: choice,
+    timestamp: Date.now()
+  });
+  
+  showToast(`Вы выбрали: ${getChoiceName(choice)} ✊`);
+}
+
+function getChoiceName(choice) {
+  const names = {
+    'rock': '🪨 Камень',
+    'paper': '📄 Бумага',
+    'scissors': '✂️ Ножницы'
+  };
+  return names[choice] || choice;
+}
+
+function determineWinner(choice1, choice2) {
+  if (choice1 === choice2) return 'tie';
+  
+  const wins = {
+    'rock': 'scissors',
+    'scissors': 'paper',
+    'paper': 'rock'
+  };
+  
+  if (wins[choice1] === choice2) return 'player1';
+  return 'player2';
+}
+
 function startTimer() {
   state.gameState.timeLeft = 10;
+  const timerBar = document.getElementById('timer-bar');
+  const timerCount = document.getElementById('timer-count');
+  
   state.gameState.timer = setInterval(() => {
     state.gameState.timeLeft--;
-    document.getElementById('game-timer').textContent = state.gameState.timeLeft;
+    timerCount.textContent = state.gameState.timeLeft;
+    timerBar.style.width = (state.gameState.timeLeft * 10) + '%';
     
     if (state.gameState.timeLeft <= 0) {
       clearInterval(state.gameState.timer);
@@ -857,13 +1020,13 @@ function processRoundResult(choice1, choice2) {
   let resultText = '';
   
   if (winner === 'tie') {
-    resultText = `Ничья! (${getChoiceName(player1Choice)} = ${getChoiceName(player2Choice)})`;
+    resultText = `Ничья! \( {getChoiceName(player1Choice)} = \){getChoiceName(player2Choice)}`;
   } else if (winner === 'player1') {
     state.gameState.myScore++;
-    resultText = `Вы выиграли раунд! (${getChoiceName(player1Choice)} побеждает ${getChoiceName(player2Choice)})`;
+    resultText = `Вы выиграли раунд! \( {getChoiceName(player1Choice)} побеждает \){getChoiceName(player2Choice)}`;
   } else {
     state.gameState.opponentScore++;
-    resultText = `Вы проиграли раунд! (${getChoiceName(player2Choice)} побеждает ${getChoiceName(player1Choice)})`;
+    resultText = `Вы проиграли раунд! \( {getChoiceName(player2Choice)} побеждает \){getChoiceName(player1Choice)}`;
   }
   
   updateGameUI();
@@ -905,12 +1068,12 @@ function endGame() {
   let finalResult = '';
   
   if (state.gameState.myScore > state.gameState.opponentScore) {
-    finalResult = `🎉 Поздравляем! Вы выиграли игру (${state.gameState.myScore}:${state.gameState.opponentScore})!`;
+    finalResult = `🎉 Поздравляем! Вы выиграли игру \( {state.gameState.myScore}: \){state.gameState.opponentScore}!`;
     createConfetti(100);
   } else if (state.gameState.myScore < state.gameState.opponentScore) {
-    finalResult = `😔 Вы проиграли игру (${state.gameState.myScore}:${state.gameState.opponentScore}).`;
+    finalResult = `😔 Вы проиграли игру \( {state.gameState.myScore}: \){state.gameState.opponentScore}.`;
   } else {
-    finalResult = `🤝 Ничья! (${state.gameState.myScore}:${state.gameState.opponentScore})`;
+    finalResult = `🤝 Ничья! \( {state.gameState.myScore}: \){state.gameState.opponentScore}`;
   }
   
   showGameModal(finalResult, 'result');
@@ -970,7 +1133,6 @@ createRoomBtn.addEventListener('click', async () => {
     };
     
     chatStatus.textContent = '⏳ Ожидается собеседник...';
-    chatStatus.style.display = 'block';
     showToast('Комната создана! Код: ' + roomCode);
     
     // Listen for guest
@@ -1048,7 +1210,6 @@ joinRoomBtn.addEventListener('click', async () => {
         });
         
         chatStatus.textContent = state.peerOnline ? '🟢 Подключено! Чат начат!' : '🔴 Хост офлайн';
-        chatStatus.style.display = 'block';
         showToast('Подключились к комнате! 🎉');
         createConfetti(50);
         showRoomStatus();
@@ -1170,11 +1331,11 @@ function setupOnlineStatusTracking() {
   const userPath = state.isHost ? 'host' : 'guest';
   
   // Track my own online status
-  onDisconnect(ref(db, `rooms/${state.roomId}/${userPath}/online`)).set(false);
+  onDisconnect(ref(db, `rooms/\( {state.roomId}/ \){userPath}/online`)).set(false);
   
   // Track peer online status
   const peerPath = state.isHost ? 'guest' : 'host';
-  onValue(ref(db, `rooms/${state.roomId}/${peerPath}/online`), (snapshot) => {
+  onValue(ref(db, `rooms/\( {state.roomId}/ \){peerPath}/online`), (snapshot) => {
     const isOnline = snapshot.val() !== false;
     state.peerOnline = isOnline;
     state.peerLeft = !isOnline;
@@ -1245,7 +1406,7 @@ function setupVoicePlayer(playerId) {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `\( {mins}: \){secs.toString().padStart(2, '0')}`;
   };
   
   // Update waveform animation
@@ -1331,7 +1492,7 @@ async function sendMessage() {
   
   try {
     // Clear typing indicator immediately
-    await set(ref(db, `rooms/${state.roomId}/typing/${state.userId}`), false);
+    await set(ref(db, `rooms/\( {state.roomId}/typing/ \){state.userId}`), false);
     
     const encrypted = encryptMessage(text);
     
@@ -1412,7 +1573,7 @@ function startCallTimer() {
     state.callState.timeElapsed++;
     const mins = Math.floor(state.callState.timeElapsed / 60).toString().padStart(2, '0');
     const secs = (state.callState.timeElapsed % 60).toString().padStart(2, '0');
-    timerEl.textContent = `${mins}:${secs}`;
+    timerEl.textContent = `\( {mins}: \){secs}`;
   }, 1000);
 }
 
@@ -1775,23 +1936,9 @@ function setupZoomPrevention() {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Secure Hax Messenger initialized! 💬🔐');
   
-  // Menu button handler
-  menuBtn.addEventListener('click', toggleMenu);
-  
   // Инициализируем определение мобильного устройства
   checkMobile();
   console.log('Mobile mode:', state.isMobile ? 'ON' : 'OFF');
-  
-  // Инициализация частиц
-  resizeCanvas();
-  initParticles();
-  drawParticles();
-  
-  // Обработка ресайза
-  window.addEventListener('resize', () => {
-    resizeCanvas();
-    initParticles();
-  });
   
   // PWA инициализация
   registerServiceWorker();
@@ -1837,9 +1984,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Theme toggle
-  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-  
   // Page visibility и мобильные оптимизации
   document.addEventListener('visibilitychange', () => {
     checkMobile();
@@ -1867,7 +2011,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('beforeunload', () => {
     if (state.roomId) {
       const userPath = state.isHost ? 'host' : 'guest';
-      set(ref(db, `rooms/${state.roomId}/${userPath}/online`), false);
+      set(ref(db, `rooms/\( {state.roomId}/ \){userPath}/online`), false);
     }
     if (state.callState.active) {
       endCall();
