@@ -24,7 +24,7 @@
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
-<button id="menu-btn" onclick="toggleMenu()">☰ Меню</button>
+<button id="menu-btn">☰ Меню</button>
 <nav id="nav-menu">
   <button onclick="showPage('home')" class="active" data-page="home">🏠 Главная</button>
   <button onclick="showPage('chat')" data-page="chat">💬 Чат</button>
@@ -271,7 +271,7 @@
     <div class="footer-links">
       <a href="https://t.me/bluzn" target="_blank">✈️ Telegram</a>
       <a href="https://github.com/0xMewhx/SecureHxMessenger" target="_blank">💻 GitHub</a>
-      <button id="theme-toggle" onclick="toggleTheme()" title="🌙 Сменить тему">🌙</button>
+      <button id="theme-toggle" title="🌙 Сменить тему">🌙</button>
     </div>
     <p class="footer-message" style="margin-top: 15px; opacity: 0.7; font-style: italic;">
       Если дочитали до сюда — вы либо мой друг, либо параноик. В любом случае, уважаю. 🔐
@@ -1775,6 +1775,9 @@ function setupZoomPrevention() {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Secure Hax Messenger initialized! 💬🔐');
   
+  // Menu button handler
+  menuBtn.addEventListener('click', toggleMenu);
+  
   // Инициализируем определение мобильного устройства
   checkMobile();
   console.log('Mobile mode:', state.isMobile ? 'ON' : 'OFF');
@@ -1833,6 +1836,9 @@ document.addEventListener('DOMContentLoaded', function() {
       makeChoice(choice);
     });
   });
+  
+  // Theme toggle
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
   
   // Page visibility и мобильные оптимизации
   document.addEventListener('visibilitychange', () => {
